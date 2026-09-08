@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0] - 2026-09-08
+## [0.0.1] - 2026-09-08
 
 ### Added
 - **Country selection**: South Korea, United States, China, India. The default is detected from the browser language (`ko`→KR, `zh`→CN, `hi`/`*-IN`→IN, otherwise US; US when the language cannot be read) and can be changed in the popup.
@@ -15,16 +15,16 @@
 - README in English with a full Korean translation.
 
 ### Changed
-- Setting `useKrHolidays` renamed to `useHolidays` (migrated automatically).
+- Setting `useKrHolidays` from the initial commit renamed to `useHolidays` (migrated automatically).
 - Extension API access now falls back from `chrome.*` to `browser.*` and from `storage.sync` to `storage.local` for Safari/Firefox compatibility.
 
 ### Packages
 | File | Browser | OS |
 |---|---|---|
-| `jira-weekend-marker-1.1.0-chrome-edge.zip` | Chrome, Edge (any Chromium) | Windows, macOS, Linux |
-| `jira-weekend-marker-1.1.0-safari-source.zip` | Safari (build with Xcode) | macOS |
-| `jira-weekend-marker-1.1.0-safari-macos-app.zip` | Safari (unsigned app, when the CI macOS job succeeds) | macOS |
+| `jira-weekend-marker-0.0.1-chrome-edge.zip` | Chrome, Edge (any Chromium) | Windows, macOS, Linux |
+| `jira-weekend-marker-0.0.1-safari-source.zip` | Safari (build with Xcode) | macOS |
+| `jira-weekend-marker-0.0.1-safari-macos-app.zip` | Safari (unsigned app, when the CI macOS job succeeds) | macOS |
 
-## [1.0.0] - 2026-09-08
+## Initial commit - 2026-09-08 (untagged)
 
 - Initial release: highlight or mask weekend and Korean public-holiday columns in the Jira timeline Weeks view.
