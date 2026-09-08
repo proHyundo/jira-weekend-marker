@@ -9,7 +9,7 @@ VERSION=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' manifest.json | head -1)
 NAME="jira-weekend-marker"
 DIST="dist"
 STAGE="$DIST/stage"
-FILES=(manifest.json background.js content.js content.css holidays.js locales.js popup.html popup.js icons _locales LICENSE README.md)
+FILES=(manifest.json background.js content.js content.css holidays.js locales.js popup.html popup.js icons _locales LICENSE README.md SECURITY.md)
 
 rm -rf "$DIST"
 mkdir -p "$STAGE/$NAME"

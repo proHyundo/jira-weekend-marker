@@ -29,7 +29,7 @@ function fmt(str, vars) {
 }
 
 function fillSelect(sel, entries, value) {
-  sel.innerHTML = "";
+  sel.replaceChildren();
   for (const [v, label] of entries) {
     const o = document.createElement("option");
     o.value = v;
@@ -92,7 +92,7 @@ function save(patch) {
 async function refreshStatus() {
   try {
     const [tab] = await ext.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !/^https:\/\/[^/]+\.(atlassian\.net|jira\.com)\//.test(tab.url || "")) {
+    if (!tab || !/^https:\/\/[^/]+\.atlassian\.net\/jira\//.test(tab.url || "")) {
       statusEl.textContent = t.notJira;
       return;
     }
@@ -116,7 +116,8 @@ async function refreshStatus() {
 const RELEASES_URL = "https://github.com/proHyundo/jira-weekend-marker/releases/tag/v";
 function showWhatsNew() {
   try {
-    const version = ext.runtime.getManifest().version;
+    const version = String(ext.runtime.getManifest().version);
+    if (!/^\d+(\.\d+){0,3}$/.test(version)) return;
     ext.storage.local.get({ seenVersion: null, updatedFrom: "" }, (v) => {
       if (v.seenVersion !== version) {
         const box = $("#whatsnew");

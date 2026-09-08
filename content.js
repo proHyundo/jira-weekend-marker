@@ -234,7 +234,24 @@
     return n;
   }
 
-  const WARN_SVG = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M6.24 1.17c.76-1.4 2.76-1.4 3.52 0l5.9 10.88c.72 1.33-.24 2.95-1.76 2.95H2.1C.58 15-.38 13.38.34 12.05zM8 10.75a1 1 0 1 0 0 2 1 1 0 0 0 0-2M7.25 4.5v5h1.5v-5z"/></svg>';
+  /** 경고 아이콘 SVG 를 DOM API 로 생성 (innerHTML 미사용) */
+  function makeWarnIcon(kind) {
+    const NS = "http://www.w3.org/2000/svg";
+    const span = document.createElement("span");
+    span.className = "jwm-warn-icon";
+    span.dataset.jwmDue = kind;
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 16 16");
+    svg.setAttribute("width", "12");
+    svg.setAttribute("height", "12");
+    svg.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS(NS, "path");
+    path.setAttribute("fill", "currentColor");
+    path.setAttribute("d", "M6.24 1.17c.76-1.4 2.76-1.4 3.52 0l5.9 10.88c.72 1.33-.24 2.95-1.76 2.95H2.1C.58 15-.38 13.38.34 12.05zM8 10.75a1 1 0 1 0 0 2 1 1 0 0 0 0-2M7.25 4.5v5h1.5v-5z");
+    svg.appendChild(path);
+    span.appendChild(svg);
+    return span;
+  }
 
   /** 행이 완료(해결)된 이슈인지: 이슈 키 링크의 취소선으로 판단 (언어 무관) */
   function isResolvedRow(bar) {
@@ -286,17 +303,19 @@
       }
       if (badge.dataset.jwmKey !== key) {
         badge.dataset.jwmKey = key;
-        const parts = [];
         const titles = [];
+        badge.replaceChildren();
         if (due) {
-          parts.push(`<span class="jwm-warn-icon" data-jwm-due="${due.kind}">${WARN_SVG}</span>`);
+          badge.appendChild(makeWarnIcon(due.kind));
           titles.push(due.title);
         }
         if (workdays !== null) {
-          parts.push(`<span class="jwm-days">${fmt(t.workdaysShort, { n: workdays })}</span>`);
+          const daysEl = document.createElement("span");
+          daysEl.className = "jwm-days";
+          daysEl.textContent = fmt(t.workdaysShort, { n: workdays });
+          badge.appendChild(daysEl);
           titles.push(fmt(t.workdaysTitle, { n: workdays, from: iso(dates.start), to: iso(dates.end) }));
         }
-        badge.innerHTML = parts.join("");
         badge.title = titles.join("\n");
       }
       // 좁은 막대는 배지를 막대 바깥(오른쪽)으로
@@ -484,11 +503,29 @@
   }
 
   /* ---------------------------------------------------------- 설정 / 감시 */
+  const MODES = ["highlight", "mask", "off"];
+  /** storage 에서 온 값을 신뢰하지 않고 타입/범위를 검증한다. */
+  function sanitize(s) {
+    const out = { ...s };
+    if (!MODES.includes(out.mode)) out.mode = DEFAULTS.mode;
+    if (typeof out.country !== "string" || !(out.country === "auto" || JWM_HOLIDAYS[out.country])) out.country = "auto";
+    if (typeof out.language !== "string" || !(out.language === "auto" || JWM_LOCALES[out.language])) out.language = "auto";
+    for (const k of ["useHolidays", "coverBars", "showWorkdays", "dueWarning"]) out[k] = Boolean(out[k]);
+    out.customHolidays = typeof out.customHolidays === "string" ? out.customHolidays.slice(0, 20000) : "";
+    const days = parseInt(out.dueWarnDays, 10);
+    out.dueWarnDays = Number.isFinite(days) ? Math.min(60, Math.max(0, days)) : DEFAULTS.dueWarnDays;
+    const alpha = Number(out.highlightAlpha);
+    out.highlightAlpha = Number.isFinite(alpha) ? Math.min(0.9, Math.max(0.02, alpha)) : DEFAULTS.highlightAlpha;
+    if (!HEX_RE.test(String(out.highlightColor))) out.highlightColor = DEFAULTS.highlightColor;
+    if (!HEX_RE.test(String(out.warnColor))) out.warnColor = DEFAULTS.warnColor;
+    return out;
+  }
+
   function normalize(items) {
     const s = { ...DEFAULTS, ...items };
     // v1.0 → v1.1 migration
     if (typeof items.useKrHolidays === "boolean" && typeof items.useHolidays !== "boolean") s.useHolidays = items.useKrHolidays;
-    return s;
+    return sanitize(s);
   }
 
   function loadSettings(cb) {
@@ -532,6 +569,7 @@
         for (const k of Object.keys(changes)) {
           if (k in DEFAULTS) settings[k] = changes[k].newValue ?? DEFAULTS[k];
         }
+        settings = sanitize(settings);
         rebuildHolidayMap();
         clearAll();
         apply();
@@ -553,8 +591,9 @@
     }
   }
 
-  // 테스트/디버깅용 훅
-  window.__jwm = {
+  // 테스트용 훅: 확장으로 실행될 때(chrome.runtime.id 존재)는 페이지에 노출하지 않는다.
+  const isExtensionContext = !!(ext && ext.runtime && ext.runtime.id);
+  if (!isExtensionContext) window.__jwm = {
     apply,
     get locale() { return locale; },
     get settings() { return settings; },

@@ -1,9 +1,10 @@
-# Jira Timeline Weekend Marker v0.0.4
+# Jira Timeline Weekend Marker v0.0.5
 
 Highlights or hides weekend and public-holiday columns in the Jira Cloud timeline (Weeks view).
 
 ## What's new
 
+- **Security hardening** — scope narrowed to `*.atlassian.net/jira/*`, no `innerHTML`, validated settings, pinned CI actions. See `SECURITY.md`.
 - **Working-day count in bars** — badge with the number of working days (weekends/holidays excluded) on every issue bar.
 - **Deadline warning** — warning icon and a thin dark-yellow outline on issues that are overdue or due within N working days (configurable).
 - **Update notice** — "NEW" badge on the icon and a what's-new link in the popup after each update.
@@ -19,9 +20,9 @@ Highlights or hides weekend and public-holiday columns in the Jira Cloud timelin
 
 | File | Browser | OS | Install |
 |---|---|---|---|
-| `jira-weekend-marker-0.0.4-chrome-edge.zip` | Chrome, Edge, other Chromium browsers | Windows / macOS / Linux | Unzip → `chrome://extensions` or `edge://extensions` → Developer mode → *Load unpacked* |
-| `jira-weekend-marker-0.0.4-safari-source.zip` | Safari | macOS | Unzip → `./safari/build-safari.sh` → Run in Xcode → enable in Safari ▸ Settings ▸ Extensions |
-| `jira-weekend-marker-0.0.4-safari-macos-app.zip` | Safari (unsigned app) | macOS | Unzip → open the app once → Safari ▸ Develop ▸ *Allow Unsigned Extensions* → enable in Settings ▸ Extensions |
+| `jira-weekend-marker-0.0.5-chrome-edge.zip` | Chrome, Edge, other Chromium browsers | Windows / macOS / Linux | Unzip → `chrome://extensions` or `edge://extensions` → Developer mode → *Load unpacked* |
+| `jira-weekend-marker-0.0.5-safari-source.zip` | Safari | macOS | Unzip → `./safari/build-safari.sh` → Run in Xcode → enable in Safari ▸ Settings ▸ Extensions |
+| `jira-weekend-marker-0.0.5-safari-macos-app.zip` | Safari (unsigned app) | macOS | Unzip → open the app once → Safari ▸ Develop ▸ *Allow Unsigned Extensions* → enable in Settings ▸ Extensions |
 
 ## Notes
 
@@ -31,12 +32,13 @@ Highlights or hides weekend and public-holiday columns in the Jira Cloud timelin
 
 ---
 
-# Jira Timeline Weekend Marker v0.0.4 (한국어)
+# Jira Timeline Weekend Marker v0.0.5 (한국어)
 
 Jira Cloud 타임라인(주 단위 보기)에서 주말·공휴일 열을 빨갛게 강조하거나 화면에서 가립니다.
 
 ## 새로운 기능
 
+- **보안 강화** — 동작 범위를 `*.atlassian.net/jira/*`로 축소, `innerHTML` 제거, 설정값 검증, CI 액션 SHA 고정. `SECURITY.md` 참고.
 - **막대 안 근무일 수 표시** — 모든 이슈 막대에 주말·공휴일을 뺀 근무일 수 배지.
 - **마감 경고** — 기한이 지났거나 N 근무일 이내인 이슈에 경고 아이콘과 짙은 노란색 얇은 테두리 (N 설정 가능).
 - **업데이트 알림** — 업데이트 후 아이콘에 "NEW" 배지, 팝업에 변경 내용 링크 표시.
@@ -52,9 +54,9 @@ Jira Cloud 타임라인(주 단위 보기)에서 주말·공휴일 열을 빨갛
 
 | 파일 | 브라우저 | OS | 설치 |
 |---|---|---|---|
-| `jira-weekend-marker-0.0.4-chrome-edge.zip` | Chrome, Edge 등 Chromium 계열 | Windows / macOS / Linux | 압축 해제 → `chrome://extensions` 또는 `edge://extensions` → 개발자 모드 → *압축해제된 확장 프로그램을 로드* |
-| `jira-weekend-marker-0.0.4-safari-source.zip` | Safari | macOS | 압축 해제 → `./safari/build-safari.sh` → Xcode에서 Run → Safari ▸ 설정 ▸ 확장 프로그램에서 활성화 |
-| `jira-weekend-marker-0.0.4-safari-macos-app.zip` | Safari (미서명 앱) | macOS | 압축 해제 → 앱 한 번 실행 → Safari ▸ 개발자용 ▸ *서명되지 않은 확장 프로그램 허용* → 설정 ▸ 확장 프로그램에서 활성화 |
+| `jira-weekend-marker-0.0.5-chrome-edge.zip` | Chrome, Edge 등 Chromium 계열 | Windows / macOS / Linux | 압축 해제 → `chrome://extensions` 또는 `edge://extensions` → 개발자 모드 → *압축해제된 확장 프로그램을 로드* |
+| `jira-weekend-marker-0.0.5-safari-source.zip` | Safari | macOS | 압축 해제 → `./safari/build-safari.sh` → Xcode에서 Run → Safari ▸ 설정 ▸ 확장 프로그램에서 활성화 |
+| `jira-weekend-marker-0.0.5-safari-macos-app.zip` | Safari (미서명 앱) | macOS | 압축 해제 → 앱 한 번 실행 → Safari ▸ 개발자용 ▸ *서명되지 않은 확장 프로그램 허용* → 설정 ▸ 확장 프로그램에서 활성화 |
 
 ## 참고
 

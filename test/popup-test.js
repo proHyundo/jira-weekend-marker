@@ -9,7 +9,7 @@ const EXT = path.resolve(__dirname, "../jira-weekend-marker");
     await page.addInitScript((country) => {
       const store = country ? { country } : {};
       window.chrome = { storage: { sync: { get: (k, cb) => cb({ ...store }), set: (p, cb) => { Object.assign(store, p); cb && cb(); } } },
-        tabs: { query: async () => [{ id: 1, url: "https://x.atlassian.net/jira" }], sendMessage: (id, m, cb) => cb({ dayCells: 35, weeks: 5, anchor: "2026-09-08" }) },
+        tabs: { query: async () => [{ id: 1, url: "https://x.atlassian.net/jira/software/projects/ACF/boards/1/timeline" }], sendMessage: (id, m, cb) => cb({ dayCells: 35, weeks: 5, anchor: "2026-09-08" }) },
         runtime: { lastError: null, getManifest: () => ({ version: "0.0.4" }) } }; window.chrome.storage.local = { get: (d, cb) => cb({ seenVersion: null }), set: () => {} }; window.chrome.action = { setBadgeText: () => {} };
     }, country);
     await page.goto("file://" + path.join(EXT, "popup.html"));

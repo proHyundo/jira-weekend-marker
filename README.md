@@ -87,10 +87,15 @@ Click the toolbar icon to open the popup. Settings are saved automatically and a
 
 Holiday calendars live in `holidays.js` (per country: `dates`, `workdays`, optional rule-based `generate`); UI strings in `locales.js`. Dates that governments have not yet officially confirmed (CN 2027–2028 State Council notices, IN 2027–2028 DoPT lists, moon-sighting dependent Islamic holidays) are marked *provisional* in the holiday name — please verify against official announcements and adjust via *Custom days off* or a pull request.
 
+## Security & privacy
+
+The extension requests only `storage` and host access to `https://*.atlassian.net/jira/*`. It makes no network requests, collects no data and bundles all holiday tables. Injected elements are built with DOM APIs (no `innerHTML`) and every stored setting is validated before use. See [SECURITY.md](SECURITY.md) for details and for how to report a vulnerability.
+
 ## Project layout
 
 ```
 manifest.json        Manifest V3 (Chrome, Edge, Safari)
+SECURITY.md          permissions, data handling, vulnerability reporting
 background.js        service worker: "NEW" badge after an update
 content.js / .css    timeline analysis, shading, badges, warnings
 holidays.js          holiday calendars (KR / US / CN / IN)
@@ -205,10 +210,15 @@ macOS CI 작업이 성공하면 서명되지 않은 `jira-weekend-marker-<versio
 
 공휴일 달력은 `holidays.js`(국가별 `dates`, `workdays`, 규칙 기반 `generate`), UI 문자열은 `locales.js`에 있습니다. 정부가 아직 공식 확정하지 않은 날짜(중국 2027~2028 국무원 공지, 인도 2027~2028 DoPT 목록, 달 관측에 따라 바뀌는 이슬람 명절)는 휴일 이름에 *잠정(暂定/अनुमानित)*으로 표시되어 있으니 공식 발표를 확인해 *사용자 지정 휴일*이나 Pull Request로 조정해 주세요.
 
+## 보안·개인정보
+
+확장이 요청하는 권한은 `storage`와 `https://*.atlassian.net/jira/*` 호스트 접근뿐입니다. 네트워크 요청을 전혀 하지 않고 데이터를 수집하지 않으며, 공휴일 표는 모두 내장되어 있습니다. 삽입 요소는 DOM API로만 생성하고(`innerHTML` 미사용) 저장된 설정값은 사용 전에 모두 검증합니다. 자세한 내용과 취약점 제보 방법은 [SECURITY.md](SECURITY.md)를 참고하세요.
+
 ## 프로젝트 구성
 
 ```
 manifest.json        Manifest V3 (Chrome, Edge, Safari 공용)
+SECURITY.md          권한, 데이터 처리, 취약점 제보
 background.js        서비스 워커: 업데이트 후 "NEW" 배지
 content.js / .css    타임라인 분석, 음영, 배지, 경고
 holidays.js          공휴일 달력 (KR / US / CN / IN)

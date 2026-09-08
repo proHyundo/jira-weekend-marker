@@ -5,8 +5,9 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# 최소 권한: 기본은 읽기, 릴리스 생성 잡에서만 contents: write
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -15,13 +16,15 @@ jobs:
     outputs:
       version: ${{ steps.meta.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - id: meta
         run: |
           VERSION=$(python3 -c 'import json; print(json.load(open("manifest.json"))["version"])')
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - run: ./build.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: packages
           path: dist/*.zip
@@ -32,7 +35,9 @@ jobs:
     continue-on-error: true
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Convert with safari-web-extension-converter
         run: ./safari/build-safari.sh --no-open
       - name: Build unsigned app with xcodebuild
@@ -46,7 +51,7 @@ jobs:
           APP=$(find safari/build/DerivedData -maxdepth 6 -name '*.app' -path '*Release*' | head -1)
           mkdir -p dist
           ditto -c -k --keepParent "$APP" "dist/jira-weekend-marker-${{ needs.build.outputs.version }}-safari-macos-app.zip"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: safari-app
           path: dist/*.zip
@@ -54,11 +59,15 @@ jobs:
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs: [build, safari-app]
     if: always() && needs.build.result == 'success' && startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts
           merge-multiple: true
@@ -71,7 +80,7 @@ jobs:
           ' CHANGELOG.md > notes.md
           [ -s notes.md ] || cp RELEASE_NOTES.md notes.md
           cat notes.md
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           name: v${{ needs.build.outputs.version }}
           body_path: notes.md

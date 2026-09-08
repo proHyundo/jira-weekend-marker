@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
+  "minimum_chrome_version": "105",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -13,8 +14,7 @@
     "storage"
   ],
   "host_permissions": [
-    "https://*.atlassian.net/*",
-    "https://*.jira.com/*"
+    "https://*.atlassian.net/jira/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -31,8 +31,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.atlassian.net/*",
-        "https://*.jira.com/*"
+        "https://*.atlassian.net/jira/*"
       ],
       "js": [
         "holidays.js",

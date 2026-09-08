@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.5] - 2026-09-08
+
+### Security
+- **Narrowed scope**: the content script and host permission now cover only `https://*.atlassian.net/jira/*` (previously all of `*.atlassian.net` and `*.jira.com`), so the extension no longer runs on Confluence or other Atlassian pages.
+- **No `innerHTML`**: badges and the warning icon are built with DOM APIs; select boxes in the popup use `replaceChildren()`.
+- **Settings validation**: every value coming from `storage` is sanitised (allow-listed mode/country/language, `#rrggbb` colors, clamped numbers, length-limited text) both at load and on change.
+- **Debug hook hidden**: `window.__jwm` is only exposed outside the extension context (test harness).
+- **CI hardening**: actions pinned to commit SHAs, `contents: write` limited to the release job, `persist-credentials: false` on checkout.
+- `minimum_chrome_version: 105` declared; `SECURITY.md` added (permissions, data handling, reporting).
+
 ## [0.0.4] - 2026-09-08
 
 ### Changed
