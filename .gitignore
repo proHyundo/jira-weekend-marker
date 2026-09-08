@@ -3,3 +3,4 @@ safari/build/
 node_modules/
 test/out/
 .DS_Store
+Claude outputs/
