@@ -30,6 +30,13 @@ html[data-jwm-mode="highlight"] .jwm-day-off[data-jwm-kind="holiday"] {
   text-underline-offset: 2px;
 }
 
+/* 주말이지만 근무일로 지정된 날 (예: 중국 调休) — 점선 밑줄로만 표시 */
+html[data-jwm-mode="highlight"] .jwm-day-work {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 2px;
+}
+
 /* ---------- 마스킹 모드: 주말/공휴일 열을 화면에서 지움 ---------- */
 html[data-jwm-mode="mask"] .jwm-shade {
   background: var(--ds-surface, #ffffff);

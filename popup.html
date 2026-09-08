@@ -1,18 +1,18 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>Jira Timeline Weekend Marker</title>
 <style>
   :root { color-scheme: light dark; }
   body {
-    width: 300px; margin: 0; padding: 14px 16px 16px;
-    font: 13px/1.45 -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", Roboto, sans-serif;
+    width: 310px; margin: 0; padding: 14px 16px 16px;
+    font: 13px/1.45 -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans", "Noto Sans Devanagari", Roboto, sans-serif;
     color: #172b4d; background: #fff;
   }
   @media (prefers-color-scheme: dark) {
     body { color: #dce5f5; background: #1d2125; }
-    textarea { background: #22272b; color: #dce5f5; border-color: #454f59; }
+    textarea, select { background: #22272b; color: #dce5f5; border-color: #454f59; }
     .hint, .status { color: #9fadbc; }
     fieldset { border-color: #454f59; }
   }
@@ -21,9 +21,12 @@
   fieldset { border: 1px solid #dfe1e6; border-radius: 6px; padding: 8px 10px 10px; margin: 0 0 10px; }
   legend { font-weight: 600; padding: 0 4px; }
   label.row { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
-  label.row small { color: #6b778c; margin-left: auto; }
+  label.row .grow { flex: 1; }
+  select {
+    font: inherit; padding: 3px 6px; border: 1px solid #dfe1e6; border-radius: 4px; width: 205px;
+  }
   textarea {
-    width: 100%; box-sizing: border-box; height: 70px; resize: vertical;
+    width: 100%; box-sizing: border-box; height: 66px; resize: vertical;
     font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace;
     border: 1px solid #dfe1e6; border-radius: 4px; padding: 6px;
   }
@@ -35,28 +38,38 @@
 </style>
 </head>
 <body>
-  <h1><span class="dot"></span>Jira Timeline Weekend Marker</h1>
+  <h1><span class="dot"></span><span data-i18n="title">Jira Timeline Weekend Marker</span></h1>
 
   <fieldset>
-    <legend>표시 방식</legend>
-    <label class="row"><input type="radio" name="mode" value="highlight"> <span class="swatch h"></span>빨갛게 강조</label>
-    <label class="row"><input type="radio" name="mode" value="mask"> <span class="swatch m"></span>화면에서 가리기(마스킹)</label>
-    <label class="row"><input type="radio" name="mode" value="off"> 끄기</label>
+    <legend data-i18n="regionLegend">Country &amp; language</legend>
+    <label class="row"><span class="grow" data-i18n="country">Country</span>
+      <select id="country"></select></label>
+    <label class="row"><span class="grow" data-i18n="language">Language</span>
+      <select id="language"></select></label>
   </fieldset>
 
   <fieldset>
-    <legend>옵션</legend>
-    <label class="row"><input type="checkbox" id="useKrHolidays"> 한국 공휴일 포함 <small>2025~2027 내장</small></label>
-    <label class="row"><input type="checkbox" id="coverBars"> 이슈 막대 위까지 덮기</label>
+    <legend data-i18n="modeLegend">Display</legend>
+    <label class="row"><input type="radio" name="mode" value="highlight"> <span class="swatch h"></span><span data-i18n="modeHighlight"></span></label>
+    <label class="row"><input type="radio" name="mode" value="mask"> <span class="swatch m"></span><span data-i18n="modeMask"></span></label>
+    <label class="row"><input type="radio" name="mode" value="off"> <span data-i18n="modeOff"></span></label>
   </fieldset>
 
   <fieldset>
-    <legend>사용자 지정 휴일</legend>
-    <textarea id="customHolidays" placeholder="2026-12-31 워크숍&#10;2027-01-02 창립기념일" spellcheck="false"></textarea>
-    <p class="hint">한 줄에 하나씩 <code>YYYY-MM-DD 이름</code> 형식. 저장은 자동입니다.</p>
+    <legend data-i18n="optionsLegend">Options</legend>
+    <label class="row"><input type="checkbox" id="useHolidays"> <span data-i18n="useHolidays"></span></label>
+    <label class="row"><input type="checkbox" id="coverBars"> <span data-i18n="coverBars"></span></label>
+  </fieldset>
+
+  <fieldset>
+    <legend data-i18n="customLegend">Custom days off</legend>
+    <textarea id="customHolidays" spellcheck="false"></textarea>
+    <p class="hint" data-i18n="customHint"></p>
   </fieldset>
 
   <div class="status" id="status"></div>
+  <script src="holidays.js"></script>
+  <script src="locales.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

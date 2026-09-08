@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Jira Timeline Weekend Marker"
+  },
+  "extDescription": {
+    "message": "在 Jira 时间线（周视图）中高亮或隐藏周末与法定节假日列（韩/美/中/印）。"
+  }
+}

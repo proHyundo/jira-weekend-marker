@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Jira Timeline Weekend Marker"
+  },
+  "extDescription": {
+    "message": "Highlights or hides weekend and public-holiday columns (KR/US/CN/IN) in the Jira timeline Weeks view."
+  }
+}

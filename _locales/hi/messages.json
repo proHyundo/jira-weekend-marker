@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Jira Timeline Weekend Marker"
+  },
+  "extDescription": {
+    "message": "Jira टाइमलाइन (सप्ताह दृश्य) में सप्ताहांत और सार्वजनिक अवकाश (KR/US/CN/IN) कॉलम को हाइलाइट या छिपाता है।"
+  }
+}

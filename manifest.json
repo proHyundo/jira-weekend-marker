@@ -1,17 +1,23 @@
 {
   "manifest_version": 3,
-  "name": "Jira Timeline Weekend Marker",
-  "version": "1.0.0",
-  "description": "Jira 타임라인(주 단위 보기)에서 주말·한국 공휴일 열을 빨갛게 강조하거나 화면에서 가립니다.",
+  "name": "__MSG_extName__",
+  "version": "1.1.0",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": ["storage"],
-  "host_permissions": ["https://*.atlassian.net/*", "https://*.jira.com/*"],
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.atlassian.net/*",
+    "https://*.jira.com/*"
+  ],
   "action": {
-    "default_title": "Jira Timeline Weekend Marker",
+    "default_title": "__MSG_extName__",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
@@ -21,9 +27,18 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.atlassian.net/*", "https://*.jira.com/*"],
-      "js": ["holidays.js", "content.js"],
-      "css": ["content.css"],
+      "matches": [
+        "https://*.atlassian.net/*",
+        "https://*.jira.com/*"
+      ],
+      "js": [
+        "holidays.js",
+        "locales.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     }
   ]

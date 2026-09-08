@@ -16,17 +16,26 @@
   const COL_PREFIX = "timeline.chart-overlays.columns-overlay.column-";
   const SHADE_CLASS = "jwm-shade";
   const DAY_CLASS = "jwm-day-off";
+  const WORKDAY_CLASS = "jwm-day-work";
 
   const DEFAULTS = {
     mode: "highlight",        // "highlight" | "mask" | "off"
-    useKrHolidays: true,      // 내장 한국 공휴일 사용
+    country: "auto",          // "auto" | "KR" | "US" | "CN" | "IN"
+    language: "auto",         // "auto" | "en" | "ko" | "zh" | "hi"
+    useHolidays: true,        // 내장 공휴일 사용
     coverBars: false,         // 음영을 막대 위에도 덮을지
     customHolidays: ""        // "YYYY-MM-DD 이름" 줄 단위
   };
 
-  const hasChrome = typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync;
+  // chrome.* (callback style) is available in Chrome, Edge, Safari and Firefox; browser.* is the fallback
+  const ext = typeof chrome !== "undefined" && chrome.storage ? chrome : (typeof browser !== "undefined" && browser.storage ? browser : null);
+  const storage = ext && ext.storage ? (ext.storage.sync || ext.storage.local) : null;
   let settings = { ...DEFAULTS };
-  let holidayMap = new Map();
+  let holidayMap = new Map();   // iso -> name
+  let workdayMap = new Map();   // iso -> reason (weekend days that are working days)
+  let weekendDays = [0, 6];
+  let t = JWM_LOCALES.en;       // active UI strings
+  let locale = { country: "US", lang: "en" };
   let scheduled = false;
   let applying = false;
 
@@ -45,10 +54,14 @@
   };
 
   function rebuildHolidayMap() {
-    holidayMap = new Map();
-    if (settings.useKrHolidays && typeof JWM_KR_HOLIDAYS === "object") {
-      for (const [k, v] of Object.entries(JWM_KR_HOLIDAYS)) holidayMap.set(k, v);
-    }
+    const r = jwmResolveLocale(settings);
+    locale = { country: r.country, lang: r.lang };
+    t = r.t;
+    const thisYear = new Date().getFullYear();
+    const cal = jwmBuildCalendar(r.country, thisYear - 3, thisYear + 5);
+    weekendDays = cal.weekend;
+    workdayMap = cal.workdays;
+    holidayMap = settings.useHolidays ? cal.holidays : new Map();
     String(settings.customHolidays || "")
       .split(/\r?\n/)
       .map((s) => s.trim())
@@ -57,7 +70,7 @@
         const m = line.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})\s*(.*)$/);
         if (!m) return;
         const key = `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
-        holidayMap.set(key, m[4] || "사용자 지정 휴일");
+        holidayMap.set(key, m[4] || t.customDefault);
       });
   }
 
@@ -65,9 +78,13 @@
   function offInfo(date) {
     const key = iso(date);
     const holiday = holidayMap.get(key);
-    const dow = date.getDay();
     if (holiday) return { kind: "holiday", name: holiday };
-    if (dow === 0 || dow === 6) return { kind: "weekend", name: dow === 6 ? "토요일" : "일요일" };
+    const dow = date.getDay();
+    if (weekendDays.includes(dow)) {
+      // 중국 조휴(调休)처럼 주말이지만 근무일로 지정된 날은 제외
+      if (workdayMap.has(key)) return null;
+      return { kind: "weekend", name: dow === 6 ? t.saturday : t.sunday };
+    }
     return null;
   }
 
@@ -159,6 +176,7 @@
         }
         const info = offInfo(date);
         if (info) w.off.push({ dayIndex: d, ...info, date });
+        else if (cell && workdayMap.has(iso(date))) cell.workday = workdayMap.get(iso(date));
       }
     }
     return { weeks, anchor };
@@ -173,13 +191,24 @@
         const o = offByIdx.get(d);
         if (o) {
           cell.el.classList.add(DAY_CLASS);
+          cell.el.classList.remove(WORKDAY_CLASS);
           if (cell.el.dataset.jwmKind !== o.kind) cell.el.dataset.jwmKind = o.kind;
           const title = `${iso(o.date)} ${o.name}`;
           if (cell.el.title !== title) cell.el.title = title;
-        } else if (cell.el.classList.contains(DAY_CLASS)) {
-          cell.el.classList.remove(DAY_CLASS);
-          delete cell.el.dataset.jwmKind;
-          cell.el.removeAttribute("title");
+        } else {
+          if (cell.el.classList.contains(DAY_CLASS)) {
+            cell.el.classList.remove(DAY_CLASS);
+            delete cell.el.dataset.jwmKind;
+            cell.el.removeAttribute("title");
+          }
+          if (cell.workday) {
+            cell.el.classList.add(WORKDAY_CLASS);
+            const title = `${iso(cell.date)} ${t.workday}: ${cell.workday}`;
+            if (cell.el.title !== title) cell.el.title = title;
+          } else if (cell.el.classList.contains(WORKDAY_CLASS)) {
+            cell.el.classList.remove(WORKDAY_CLASS);
+            cell.el.removeAttribute("title");
+          }
         }
       });
     }
@@ -226,8 +255,8 @@
 
   function clearAll() {
     document.querySelectorAll(`.${SHADE_CLASS}`).forEach((el) => el.remove());
-    document.querySelectorAll(`.${DAY_CLASS}`).forEach((el) => {
-      el.classList.remove(DAY_CLASS);
+    document.querySelectorAll(`.${DAY_CLASS}, .${WORKDAY_CLASS}`).forEach((el) => {
+      el.classList.remove(DAY_CLASS, WORKDAY_CLASS);
       delete el.dataset.jwmKind;
       el.removeAttribute("title");
     });
@@ -270,15 +299,31 @@
   }
 
   /* ---------------------------------------------------------- 설정 / 감시 */
+  function normalize(items) {
+    const s = { ...DEFAULTS, ...items };
+    // v1.0 → v1.1 migration
+    if (typeof items.useKrHolidays === "boolean" && typeof items.useHolidays !== "boolean") s.useHolidays = items.useKrHolidays;
+    return s;
+  }
+
   function loadSettings(cb) {
-    if (!hasChrome) {
+    if (!storage) {
       cb();
       return;
     }
-    chrome.storage.sync.get(DEFAULTS, (items) => {
-      settings = { ...DEFAULTS, ...items };
+    let done = false;
+    const finish = (items) => {
+      if (done) return;
+      done = true;
+      settings = normalize(items || {});
       cb();
-    });
+    };
+    try {
+      const p = storage.get(null, finish);
+      if (p && typeof p.then === "function") p.then(finish, () => finish({}));
+    } catch (e) {
+      finish({});
+    }
   }
 
   function start() {
@@ -296,9 +341,9 @@
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-    if (hasChrome) {
-      chrome.storage.onChanged.addListener((changes, area) => {
-        if (area !== "sync") return;
+    if (ext && ext.storage && ext.storage.onChanged) {
+      ext.storage.onChanged.addListener((changes, area) => {
+        if (area !== "sync" && area !== "local") return;
         for (const k of Object.keys(changes)) {
           if (k in DEFAULTS) settings[k] = changes[k].newValue ?? DEFAULTS[k];
         }
@@ -306,13 +351,17 @@
         clearAll();
         apply();
       });
-      chrome.runtime.onMessage?.addListener((msg, _sender, sendResponse) => {
+    }
+    if (ext && ext.runtime && ext.runtime.onMessage) {
+      ext.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         if (msg && msg.type === "jwm:status") {
           const model = settings.mode === "off" ? null : buildWeekModel();
           sendResponse({
             weeks: model ? model.weeks.length : 0,
             anchor: model ? iso(model.anchor.date) : null,
-            dayCells: document.querySelectorAll(`[data-testid^="${DAY_PREFIX}"]`).length
+            dayCells: document.querySelectorAll(`[data-testid^="${DAY_PREFIX}"]`).length,
+            country: locale.country,
+            lang: locale.lang
           });
         }
       });
@@ -320,7 +369,12 @@
   }
 
   // 테스트/디버깅용 훅
-  window.__jwm = { apply, get settings() { return settings; }, set settings(v) { settings = { ...settings, ...v }; rebuildHolidayMap(); } };
+  window.__jwm = {
+    apply,
+    get locale() { return locale; },
+    get settings() { return settings; },
+    set settings(v) { settings = { ...settings, ...v }; rebuildHolidayMap(); }
+  };
 
   loadSettings(start);
 })();

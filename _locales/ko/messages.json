@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Jira Timeline Weekend Marker"
+  },
+  "extDescription": {
+    "message": "Jira 타임라인(주 단위 보기)에서 주말·공휴일(한국/미국/중국/인도) 열을 빨갛게 강조하거나 화면에서 가립니다."
+  }
+}
