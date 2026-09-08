@@ -1,4 +1,14 @@
-/* Jira Timeline Weekend Marker */
+/* Jira Timeline Weekend Marker
+ * 색상/강도는 content.js 가 <html> 에 CSS 변수로 넣는다:
+ *   --jwm-hl-rgb   강조 색상 (r, g, b)      기본 222, 53, 11
+ *   --jwm-hl-alpha 강조 음영 투명도          기본 0.12
+ *   --jwm-warn     기한 경고 색상            기본 #e2b203
+ */
+:root {
+  --jwm-hl-rgb: 222, 53, 11;
+  --jwm-hl-alpha: 0.12;
+  --jwm-warn: #e2b203;
+}
 
 .jwm-shade {
   position: absolute;
@@ -9,19 +19,19 @@
   z-index: 0;
 }
 
-/* ---------- 강조 모드: 주말/공휴일 열을 빨갛게 ---------- */
+/* ---------- 강조 모드: 주말/공휴일 열을 색으로 ---------- */
 html[data-jwm-mode="highlight"] .jwm-shade {
-  background: rgba(222, 53, 11, 0.12);
+  background: rgba(var(--jwm-hl-rgb), var(--jwm-hl-alpha));
 }
 html[data-jwm-mode="highlight"] .jwm-shade[data-jwm-kind="holiday"] {
   background: repeating-linear-gradient(
     -45deg,
-    rgba(222, 53, 11, 0.22) 0 6px,
-    rgba(222, 53, 11, 0.10) 6px 12px
+    rgba(var(--jwm-hl-rgb), calc(var(--jwm-hl-alpha) * 1.8)) 0 6px,
+    rgba(var(--jwm-hl-rgb), calc(var(--jwm-hl-alpha) * 0.8)) 6px 12px
   );
 }
 html[data-jwm-mode="highlight"] .jwm-day-off {
-  color: var(--ds-text-danger, #c9372c) !important;
+  color: rgb(var(--jwm-hl-rgb)) !important;
   font-weight: 700 !important;
 }
 html[data-jwm-mode="highlight"] .jwm-day-off[data-jwm-kind="holiday"] {
@@ -57,7 +67,52 @@ html[data-jwm-cover="1"] .jwm-shade {
   z-index: 5;
 }
 
+/* ---------- 막대 배지: 근무일 수 + 기한 경고 아이콘 ---------- */
+.jwm-badge {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px;
+  height: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #172b4d;
+  font: 600 11px/16px -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", Roboto, sans-serif;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: default;
+  z-index: 1;
+}
+[data-issmallbar="true"] > .jwm-badge {
+  height: 14px;
+  font-size: 10px;
+  line-height: 14px;
+}
+/* 좁은 막대: 배지를 막대 바깥 오른쪽에 */
+.jwm-badge.jwm-badge-outside {
+  left: calc(100% + 6px);
+  background: var(--ds-surface-overlay, #ffffff);
+  box-shadow: 0 0 0 1px var(--ds-border, #dfe1e6);
+}
+.jwm-warn-icon {
+  display: inline-flex;
+  color: var(--jwm-warn);
+}
+.jwm-warn-icon svg {
+  display: block;
+}
+
+/* 기한이 주말/공휴일인 막대: 얇은 테두리 */
+.jwm-due-off {
+  box-shadow: 0 0 0 2px var(--jwm-warn) !important;
+}
+
 /* 끄기 */
-html[data-jwm-mode="off"] .jwm-shade {
+html[data-jwm-mode="off"] .jwm-shade,
+html[data-jwm-mode="off"] .jwm-badge {
   display: none;
 }

@@ -18,6 +18,9 @@
   const DAY_CLASS = "jwm-day-off";
   const WORKDAY_CLASS = "jwm-day-work";
   const COL_CLASS = "jwm-col";
+  const BADGE_CLASS = "jwm-badge";
+  const DUE_CLASS = "jwm-due-off";
+  const BAR_SELECTOR = '[data-testid^="roadmap.timeline-table-kit.ui.chart-item-content.date-content.bar.draggable-bar-"][data-testid$="-container"]';
 
   const DEFAULTS = {
     mode: "highlight",        // "highlight" | "mask" | "off"
@@ -25,8 +28,21 @@
     language: "auto",         // "auto" | "en" | "ko" | "zh" | "hi"
     useHolidays: true,        // 내장 공휴일 사용
     coverBars: false,         // 음영을 막대 위에도 덮을지
-    customHolidays: ""        // "YYYY-MM-DD 이름" 줄 단위
+    customHolidays: "",       // "YYYY-MM-DD 이름" 줄 단위
+    showWorkdays: true,       // 막대 안에 근무일 수 배지
+    dueWarning: true,         // 기한이 휴일이면 경고 (아이콘 + 테두리)
+    highlightColor: "#de350b",// 강조 색상
+    highlightAlpha: 0.12,     // 강조 음영 투명도 (0.05 ~ 0.6)
+    warnColor: "#e2b203"      // 경고 색상 (짙은 노란색)
   };
+  const HEX_RE = /^#([0-9a-f]{6})$/i;
+  const hexToRgb = (hex) => {
+    const m = HEX_RE.exec(String(hex || "").trim());
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+  };
+  const fmt = (str, vars) => String(str).replace(/\{(\w+)\}/g, (_, k) => (vars && k in vars ? vars[k] : ""));
 
   // chrome.* (callback style) is available in Chrome, Edge, Safari and Firefox; browser.* is the fallback
   const ext = typeof chrome !== "undefined" && chrome.storage ? chrome : (typeof browser !== "undefined" && browser.storage ? browser : null);
@@ -180,7 +196,93 @@
         else if (cell && workdayMap.has(iso(date))) cell.workday = workdayMap.get(iso(date));
       }
     }
-    return { weeks, anchor };
+    const anchorAbs = anchor.weekIndex * 7 + anchor.dayIndex;
+    const dateAt = (absIdx) => addDays(anchor.date, absIdx - anchorAbs);
+    return { weeks, anchor, dateAt, totalDays: weeks.length * 7 };
+  }
+
+  /* ---------------------------------------------------------- 막대(이슈 바) */
+  /** aria-label 의 두 날짜(YYYY/MM/DD 등) 또는 픽셀 위치로 막대의 시작/종료 날짜를 구한다. */
+  function barDates(bar, model) {
+    const labelEl = bar.querySelector("[aria-label]");
+    const label = labelEl ? labelEl.getAttribute("aria-label") || "" : "";
+    const found = [...label.matchAll(/(\d{4})[/.-](\d{1,2})[/.-](\d{1,2})/g)];
+    if (found.length >= 2) {
+      const d = (m) => new Date(+m[1], +m[2] - 1, +m[3]);
+      return { start: d(found[0]), end: d(found[1]), source: "label" };
+    }
+    // 픽셀 기반 추정: left/right(px) 와 실제 폭으로 전체 폭을 복원해 하루 폭을 계산
+    const left = parseFloat(bar.style.left);
+    const right = parseFloat(bar.style.right);
+    const width = bar.getBoundingClientRect().width;
+    if (!Number.isFinite(left) || !Number.isFinite(right) || width <= 0) return null;
+    const total = left + right + width;
+    const dayW = total / model.totalDays;
+    if (!(dayW > 0)) return null;
+    const startIdx = Math.round(left / dayW);
+    const endIdx = Math.round((total - right) / dayW) - 1;
+    if (endIdx < startIdx) return null;
+    return { start: model.dateAt(startIdx), end: model.dateAt(endIdx), source: "pixel" };
+  }
+
+  function countWorkdays(start, end) {
+    let n = 0;
+    for (let d = start; d <= end; d = addDays(d, 1)) if (!offInfo(d)) n++;
+    return n;
+  }
+
+  const WARN_SVG = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M6.24 1.17c.76-1.4 2.76-1.4 3.52 0l5.9 10.88c.72 1.33-.24 2.95-1.76 2.95H2.1C.58 15-.38 13.38.34 12.05zM8 10.75a1 1 0 1 0 0 2 1 1 0 0 0 0-2M7.25 4.5v5h1.5v-5z"/></svg>';
+
+  function applyBars(model) {
+    const wantBadge = settings.showWorkdays || settings.dueWarning;
+    document.querySelectorAll(BAR_SELECTOR).forEach((bar) => {
+      observeBar(bar);
+      let badge = bar.querySelector(`:scope > .${BADGE_CLASS}`);
+      const dates = wantBadge ? barDates(bar, model) : null;
+      if (!dates) {
+        if (badge) badge.remove();
+        bar.classList.remove(DUE_CLASS);
+        return;
+      }
+      const dueOff = settings.dueWarning ? offInfo(dates.end) : null;
+      const workdays = settings.showWorkdays ? countWorkdays(dates.start, dates.end) : null;
+      const key = `${iso(dates.start)}|${iso(dates.end)}|${workdays}|${dueOff ? dueOff.kind : ""}|${locale.lang}`;
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = BADGE_CLASS;
+        bar.appendChild(badge);
+      }
+      if (badge.dataset.jwmKey !== key) {
+        badge.dataset.jwmKey = key;
+        const parts = [];
+        const titles = [];
+        if (dueOff) {
+          parts.push(`<span class="jwm-warn-icon">${WARN_SVG}</span>`);
+          titles.push(fmt(t.dueOffTitle, { date: iso(dates.end), name: dueOff.name }));
+        }
+        if (workdays !== null) {
+          parts.push(`<span class="jwm-days">${fmt(t.workdaysShort, { n: workdays })}</span>`);
+          titles.push(fmt(t.workdaysTitle, { n: workdays, from: iso(dates.start), to: iso(dates.end) }));
+        }
+        badge.innerHTML = parts.join("");
+        badge.title = titles.join("\n");
+      }
+      // 좁은 막대는 배지를 막대 바깥(오른쪽)으로
+      const width = bar.getBoundingClientRect().width;
+      badge.classList.toggle("jwm-badge-outside", width > 0 && width < 56);
+      bar.classList.toggle(DUE_CLASS, !!dueOff);
+    });
+  }
+
+  const observedBars = new WeakSet();
+  let barObserver = null;
+  function observeBar(bar) {
+    if (observedBars.has(bar)) return;
+    observedBars.add(bar);
+    if (!barObserver) {
+      barObserver = new MutationObserver(() => schedule());
+    }
+    barObserver.observe(bar, { attributes: true, attributeFilter: ["style", "aria-label"], subtree: true });
   }
 
   /* ---------------------------------------------------------- DOM 적용 */
@@ -261,6 +363,8 @@
   function clearAll() {
     document.querySelectorAll(`.${SHADE_CLASS}`).forEach((el) => el.remove());
     document.querySelectorAll(`.${COL_CLASS}`).forEach((el) => el.classList.remove(COL_CLASS));
+    document.querySelectorAll(`.${BADGE_CLASS}`).forEach((el) => el.remove());
+    document.querySelectorAll(`.${DUE_CLASS}`).forEach((el) => el.classList.remove(DUE_CLASS));
     document.querySelectorAll(`.${DAY_CLASS}, .${WORKDAY_CLASS}`).forEach((el) => {
       el.classList.remove(DAY_CLASS, WORKDAY_CLASS);
       delete el.dataset.jwmKind;
@@ -276,6 +380,10 @@
       root.setAttribute("data-jwm-mode", settings.mode);
       if (settings.coverBars) root.setAttribute("data-jwm-cover", "1");
       else root.removeAttribute("data-jwm-cover");
+      root.style.setProperty("--jwm-hl-rgb", hexToRgb(settings.highlightColor) || hexToRgb(DEFAULTS.highlightColor));
+      const alpha = Number(settings.highlightAlpha);
+      root.style.setProperty("--jwm-hl-alpha", String(Number.isFinite(alpha) ? Math.min(0.9, Math.max(0.02, alpha)) : DEFAULTS.highlightAlpha));
+      root.style.setProperty("--jwm-warn", HEX_RE.test(settings.warnColor || "") ? settings.warnColor : DEFAULTS.warnColor);
 
       if (settings.mode === "off") {
         clearAll();
@@ -288,6 +396,7 @@
       }
       applyHeader(model);
       applyColumns(model);
+      applyBars(model);
     } catch (e) {
       console.warn("[jwm] apply failed", e);
     } finally {
@@ -340,7 +449,7 @@
       // 우리가 삽입한 노드만 바뀐 경우는 무시
       const relevant = records.some((r) =>
         [...r.addedNodes, ...r.removedNodes].some(
-          (n) => !(n.nodeType === 1 && n.classList && n.classList.contains(SHADE_CLASS))
+          (n) => !(n.nodeType === 1 && n.classList && (n.classList.contains(SHADE_CLASS) || n.classList.contains(BADGE_CLASS)))
         )
       );
       if (relevant) schedule();

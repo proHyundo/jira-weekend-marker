@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.3] - 2026-09-08
+
+### Added
+- **Working-day count in issue bars** — each bar gets a badge with the number of working days between start and due date (weekends and public holidays of the selected country excluded; China's adjusted working weekends count as working days). Start/due dates are read from the bar's accessibility label, with a pixel-position fallback. Narrow bars show the badge to the right of the bar.
+- **Due-date warning** — issues whose due date falls on a weekend or holiday get a warning icon in the badge and a thin dark-yellow outline around the bar (hover for the reason).
+- **Color & intensity settings** — highlight color, shading intensity (5–60 %) and warning color are configurable in the popup, with a reset button.
+
+### Changed
+- Bars are re-evaluated when dragged/resized (attribute observer), not only on re-render.
+
 ## [0.0.2] - 2026-09-08
 
 ### Fixed

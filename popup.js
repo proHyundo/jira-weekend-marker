@@ -5,7 +5,12 @@ const DEFAULTS = {
   language: "auto",
   useHolidays: true,
   coverBars: false,
-  customHolidays: ""
+  customHolidays: "",
+  showWorkdays: true,
+  dueWarning: true,
+  highlightColor: "#de350b",
+  highlightAlpha: 0.12,
+  warnColor: "#e2b203"
 };
 const COUNTRIES = ["KR", "US", "CN", "IN"];
 const LANGS = ["en", "ko", "zh", "hi"];
@@ -58,6 +63,13 @@ function render() {
   document.querySelectorAll('input[name="mode"]').forEach((el) => (el.checked = el.value === settings.mode));
   $("#useHolidays").checked = !!settings.useHolidays;
   $("#coverBars").checked = !!settings.coverBars;
+  $("#showWorkdays").checked = !!settings.showWorkdays;
+  $("#dueWarning").checked = !!settings.dueWarning;
+  $("#highlightColor").value = settings.highlightColor || DEFAULTS.highlightColor;
+  $("#warnColor").value = settings.warnColor || DEFAULTS.warnColor;
+  const alpha = Number(settings.highlightAlpha) || DEFAULTS.highlightAlpha;
+  $("#highlightAlpha").value = alpha;
+  $("#highlightAlphaVal").textContent = `${Math.round(alpha * 100)}%`;
   const ta = $("#customHolidays");
   ta.placeholder = t.customPlaceholder;
   if (ta.value !== settings.customHolidays) ta.value = settings.customHolidays || "";
@@ -110,6 +122,17 @@ document.querySelectorAll('input[name="mode"]').forEach((r) =>
 );
 $("#useHolidays").addEventListener("change", (e) => save({ useHolidays: e.target.checked }));
 $("#coverBars").addEventListener("change", (e) => save({ coverBars: e.target.checked }));
+$("#showWorkdays").addEventListener("change", (e) => save({ showWorkdays: e.target.checked }));
+$("#dueWarning").addEventListener("change", (e) => save({ dueWarning: e.target.checked }));
+$("#highlightColor").addEventListener("change", (e) => save({ highlightColor: e.target.value }));
+$("#warnColor").addEventListener("change", (e) => save({ warnColor: e.target.value }));
+$("#highlightAlpha").addEventListener("input", (e) => {
+  $("#highlightAlphaVal").textContent = `${Math.round(e.target.value * 100)}%`;
+});
+$("#highlightAlpha").addEventListener("change", (e) => save({ highlightAlpha: Number(e.target.value) }));
+$("#resetColors").addEventListener("click", () =>
+  save({ highlightColor: DEFAULTS.highlightColor, highlightAlpha: DEFAULTS.highlightAlpha, warnColor: DEFAULTS.warnColor })
+);
 
 let timer;
 $("#customHolidays").addEventListener("input", (e) => {
