@@ -38,12 +38,12 @@ jobs:
       - name: Build unsigned app with xcodebuild
         run: |
           set -euo pipefail
-          PROJ=$(find safari/build -name '*.xcodeproj' -maxdepth 2 | head -1)
+          PROJ=$(find safari/build -maxdepth 2 -name '*.xcodeproj' | head -1)
           SCHEME=$(xcodebuild -list -project "$PROJ" -json | python3 -c 'import json,sys; print(json.load(sys.stdin)["project"]["schemes"][0])')
           xcodebuild -project "$PROJ" -scheme "$SCHEME" -configuration Release \
             CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
             -derivedDataPath safari/build/DerivedData build
-          APP=$(find safari/build/DerivedData -name '*.app' -path '*Release*' -maxdepth 6 | head -1)
+          APP=$(find safari/build/DerivedData -maxdepth 6 -name '*.app' -path '*Release*' | head -1)
           mkdir -p dist
           ditto -c -k --keepParent "$APP" "dist/jira-weekend-marker-${{ needs.build.outputs.version }}-safari-macos-app.zip"
       - uses: actions/upload-artifact@v4

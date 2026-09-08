@@ -25,6 +25,27 @@ xcrun safari-web-extension-converter "$ROOT" \
   --force \
   $OPEN_FLAG
 
+# Xcode 26's converter derives the parent app's bundle id from the app name
+# (com.prohyundo.Jira-Timeline-Weekend-Marker) while the extension gets
+# <bundle-identifier>.Extension, and xcodebuild then rejects the mismatch
+# ("Embedded binary's bundle identifier is not prefixed with the parent app's").
+# Normalise every PRODUCT_BUNDLE_IDENTIFIER in the generated project.
+BUNDLE_ID="com.prohyundo.jira-weekend-marker"
+find "$OUT" -name 'project.pbxproj' -print0 | while IFS= read -r -d '' PBX; do
+  python3 - "$PBX" "$BUNDLE_ID" <<'PY'
+import re, sys
+path, base = sys.argv[1], sys.argv[2]
+src = open(path).read()
+def fix(m):
+    value = m.group(1)
+    new = base + ".Extension" if value.rstrip('"').endswith(".Extension") else base
+    return f"PRODUCT_BUNDLE_IDENTIFIER = {new};"
+out, n = re.subn(r'PRODUCT_BUNDLE_IDENTIFIER = ("?[^";]+"?);', fix, src)
+open(path, "w").write(out)
+print(f"patched {n} bundle identifier(s) in {path}")
+PY
+done
+
 echo
 echo "Xcode project created under: $OUT"
 echo "Open it in Xcode and press Run; then enable the extension in Safari > Settings > Extensions."
