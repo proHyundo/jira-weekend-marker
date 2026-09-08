@@ -17,7 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: meta
-        run: echo "version=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' manifest.json | head -1)" >> "$GITHUB_OUTPUT"
+        run: |
+          VERSION=$(python3 -c 'import json; print(json.load(open("manifest.json"))["version"])')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - run: ./build.sh
       - uses: actions/upload-artifact@v4
         with:
