@@ -17,6 +17,7 @@
   const SHADE_CLASS = "jwm-shade";
   const DAY_CLASS = "jwm-day-off";
   const WORKDAY_CLASS = "jwm-day-work";
+  const COL_CLASS = "jwm-col";
 
   const DEFAULTS = {
     mode: "highlight",        // "highlight" | "mask" | "off"
@@ -231,6 +232,10 @@
   }
 
   function syncShades(col, offs) {
+    // 컬럼 오버레이 자체에 표식 클래스를 달아 두면 CSS 에서 (덮기 모드일 때) z-index 를 끌어올릴 수 있다.
+    // Jira 의 컬럼 오버레이는 z-index:0 인 stacking context 라서, 자식 음영의 z-index 만으로는 막대(z-index:3) 위로 올라가지 못한다.
+    if (offs.length) col.classList.add(COL_CLASS);
+    else col.classList.remove(COL_CLASS);
     const existing = new Map();
     col.querySelectorAll(`:scope > .${SHADE_CLASS}`).forEach((el) => existing.set(el.dataset.jwmD, el));
     const wanted = new Set();
@@ -255,6 +260,7 @@
 
   function clearAll() {
     document.querySelectorAll(`.${SHADE_CLASS}`).forEach((el) => el.remove());
+    document.querySelectorAll(`.${COL_CLASS}`).forEach((el) => el.classList.remove(COL_CLASS));
     document.querySelectorAll(`.${DAY_CLASS}, .${WORKDAY_CLASS}`).forEach((el) => {
       el.classList.remove(DAY_CLASS, WORKDAY_CLASS);
       delete el.dataset.jwmKind;

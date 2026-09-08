@@ -46,7 +46,13 @@ html[data-jwm-mode="mask"] .jwm-day-off {
   text-decoration: none !important;
 }
 
-/* 막대(이슈 바)까지 덮기 옵션: Jira 막대는 z-index 3 */
+/* 막대(이슈 바)까지 덮기 옵션
+ * Jira 막대는 z-index:3 이고, 주 단위 컬럼 오버레이는 z-index:0 인 stacking context 라서
+ * 음영뿐 아니라 컬럼 오버레이 자체를 막대 위로 끌어올려야 한다. (pointer-events 는 부모 컨테이너에서 none 으로 상속) */
+html[data-jwm-cover="1"] .jwm-col {
+  z-index: 5 !important;
+  pointer-events: none !important;
+}
 html[data-jwm-cover="1"] .jwm-shade {
   z-index: 5;
 }
