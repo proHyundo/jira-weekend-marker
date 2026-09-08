@@ -1,0 +1,13 @@
+{
+  "name": "jira-weekend-marker-tests",
+  "private": true,
+  "description": "Playwright regression tests against a Jira-like timeline fixture",
+  "scripts": {
+    "fixture": "node make-fixture.js",
+    "test": "node make-fixture.js && node run.js && node cover-test.js && node bars-test.js && node popup-test.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.52.0",
+    "pngjs": "^7.0.0"
+  }
+}

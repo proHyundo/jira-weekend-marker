@@ -57,14 +57,26 @@ html[data-jwm-mode="mask"] .jwm-day-off {
 }
 
 /* 막대(이슈 바)까지 덮기 옵션
- * Jira 막대는 z-index:3 이고, 주 단위 컬럼 오버레이는 z-index:0 인 stacking context 라서
- * 음영뿐 아니라 컬럼 오버레이 자체를 막대 위로 끌어올려야 한다. (pointer-events 는 부모 컨테이너에서 none 으로 상속) */
-html[data-jwm-cover="1"] .jwm-col {
-  z-index: 5 !important;
-  pointer-events: none !important;
+ * 컬럼 오버레이를 끌어올리면 고정 열·푸터 위까지 덮이므로, 대신 각 행의 막대 컨테이너 안에
+ * 행 전용 음영(.jwm-rowshade, z-index:4 > 막대 3)을 그리고, 테이블 뒤 전체 높이 오버레이의 음영은 숨긴다. */
+.jwm-rowshade {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
-html[data-jwm-cover="1"] .jwm-shade {
-  z-index: 5;
+html[data-jwm-mode="highlight"] {
+  --jwm-rowshade: rgba(var(--jwm-hl-rgb), var(--jwm-hl-alpha));
+  --jwm-rowshade-holiday: rgba(var(--jwm-hl-rgb), calc(var(--jwm-hl-alpha) * 1.4));
+}
+html[data-jwm-mode="mask"] {
+  --jwm-rowshade: var(--ds-surface, #ffffff);
+  --jwm-rowshade-holiday: var(--ds-surface, #ffffff);
+}
+html[data-jwm-cover="1"] .jwm-shade[data-jwm-scope="table"] {
+  display: none;
 }
 
 /* ---------- 막대 배지: 근무일 수 + 기한 경고 아이콘 ---------- */
@@ -113,6 +125,7 @@ html[data-jwm-cover="1"] .jwm-shade {
 
 /* 끄기 */
 html[data-jwm-mode="off"] .jwm-shade,
+html[data-jwm-mode="off"] .jwm-rowshade,
 html[data-jwm-mode="off"] .jwm-badge {
   display: none;
 }

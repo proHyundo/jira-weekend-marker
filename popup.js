@@ -8,6 +8,7 @@ const DEFAULTS = {
   customHolidays: "",
   showWorkdays: true,
   dueWarning: true,
+  dueWarnDays: 3,
   highlightColor: "#de350b",
   highlightAlpha: 0.12,
   warnColor: "#e2b203"
@@ -65,6 +66,10 @@ function render() {
   $("#coverBars").checked = !!settings.coverBars;
   $("#showWorkdays").checked = !!settings.showWorkdays;
   $("#dueWarning").checked = !!settings.dueWarning;
+  const days = Number.isFinite(Number(settings.dueWarnDays)) ? Number(settings.dueWarnDays) : DEFAULTS.dueWarnDays;
+  $("#dueWarnDays").value = days;
+  $("#dueWarnDays").disabled = !settings.dueWarning;
+  $("#dueWarnDaysLabel").textContent = fmt(t.dueWarnDays, { n: days });
   $("#highlightColor").value = settings.highlightColor || DEFAULTS.highlightColor;
   $("#warnColor").value = settings.warnColor || DEFAULTS.warnColor;
   const alpha = Number(settings.highlightAlpha) || DEFAULTS.highlightAlpha;
@@ -107,12 +112,38 @@ async function refreshStatus() {
   }
 }
 
+// 업데이트 알림: background.js 가 남긴 표식을 확인해 "새 버전" 안내를 보여 주고 배지를 지운다
+const RELEASES_URL = "https://github.com/proHyundo/jira-weekend-marker/releases/tag/v";
+function showWhatsNew() {
+  try {
+    const version = ext.runtime.getManifest().version;
+    ext.storage.local.get({ seenVersion: null, updatedFrom: "" }, (v) => {
+      if (v.seenVersion !== version) {
+        const box = $("#whatsnew");
+        const link = $("#whatsnewLink");
+        link.href = RELEASES_URL + version;
+        link.textContent = fmt(JWM_LOCALES[jwmResolveLocale(settings).lang].updated, { v: version });
+        box.hidden = false;
+        link.addEventListener("click", () => {
+          ext.storage.local.set({ seenVersion: version });
+          box.hidden = true;
+        });
+        ext.storage.local.set({ seenVersion: version });
+      }
+      if (ext.action && ext.action.setBadgeText) ext.action.setBadgeText({ text: "" });
+    });
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 storage.get(null, (items) => {
   const s = { ...DEFAULTS, ...(items || {}) };
   if (typeof items?.useKrHolidays === "boolean" && typeof items?.useHolidays !== "boolean") s.useHolidays = items.useKrHolidays;
   settings = s;
   render();
   refreshStatus();
+  showWhatsNew();
 });
 
 $("#country").addEventListener("change", (e) => save({ country: e.target.value }));
@@ -124,6 +155,10 @@ $("#useHolidays").addEventListener("change", (e) => save({ useHolidays: e.target
 $("#coverBars").addEventListener("change", (e) => save({ coverBars: e.target.checked }));
 $("#showWorkdays").addEventListener("change", (e) => save({ showWorkdays: e.target.checked }));
 $("#dueWarning").addEventListener("change", (e) => save({ dueWarning: e.target.checked }));
+$("#dueWarnDays").addEventListener("change", (e) => {
+  const n = Math.max(0, Math.min(60, parseInt(e.target.value, 10) || 0));
+  save({ dueWarnDays: n });
+});
 $("#highlightColor").addEventListener("change", (e) => save({ highlightColor: e.target.value }));
 $("#warnColor").addEventListener("change", (e) => save({ warnColor: e.target.value }));
 $("#highlightAlpha").addEventListener("input", (e) => {

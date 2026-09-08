@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.4] - 2026-09-08
+
+### Changed
+- **Deadline warning** (renamed from the holiday-due warning): the warning icon and thin outline now flag issues whose due date is **overdue** or **within N working days** (default 3, configurable in the popup). Resolved issues (struck-through key) are skipped. Hover the icon for "overdue by N days" / "N working days left".
+
+### Fixed
+- **Cover issue bars too** shaded the whole timeline surface, including the area under the sticky left columns and the footer. Cover mode now draws a per-row shading layer inside each issue row (above the bars, clipped like the bars) instead of lifting Jira's column overlay.
+- Turning off *Show working-day count in bars* left an empty white badge on bars; the badge is now removed when it has nothing to show.
+
+### Added
+- **Update notice**: after an update the toolbar icon shows a "NEW" badge and the popup shows a "Updated to vX — see what's new" link to the release notes until it is opened once.
+
 ## [0.0.3] - 2026-09-08
 
 ### Added

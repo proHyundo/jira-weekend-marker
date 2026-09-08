@@ -2,5 +2,6 @@ dist/
 safari/build/
 node_modules/
 test/out/
+test/fixture.html
 .DS_Store
 Claude outputs/

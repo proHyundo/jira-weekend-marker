@@ -17,7 +17,9 @@
   const SHADE_CLASS = "jwm-shade";
   const DAY_CLASS = "jwm-day-off";
   const WORKDAY_CLASS = "jwm-day-work";
-  const COL_CLASS = "jwm-col";
+  const ROWSHADE_CLASS = "jwm-rowshade";
+  const ROW_SELECTOR = 'tr[data-testid="native-issue-table.ui.issue-row"]';
+  const KEY_LINK_SELECTOR = '[data-testid="native-issue-table.common.ui.issue-cells.issue-key.issue-key-cell"]';
   const BADGE_CLASS = "jwm-badge";
   const DUE_CLASS = "jwm-due-off";
   const BAR_SELECTOR = '[data-testid^="roadmap.timeline-table-kit.ui.chart-item-content.date-content.bar.draggable-bar-"][data-testid$="-container"]';
@@ -30,7 +32,8 @@
     coverBars: false,         // 음영을 막대 위에도 덮을지
     customHolidays: "",       // "YYYY-MM-DD 이름" 줄 단위
     showWorkdays: true,       // 막대 안에 근무일 수 배지
-    dueWarning: true,         // 기한이 휴일이면 경고 (아이콘 + 테두리)
+    dueWarning: true,         // 마감 경고: 기한 초과 또는 N 근무일 이내 (아이콘 + 테두리)
+    dueWarnDays: 3,           // 마감 임박 기준 근무일 수
     highlightColor: "#de350b",// 강조 색상
     highlightAlpha: 0.12,     // 강조 음영 투명도 (0.05 ~ 0.6)
     warnColor: "#e2b203"      // 경고 색상 (짙은 노란색)
@@ -233,20 +236,49 @@
 
   const WARN_SVG = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M6.24 1.17c.76-1.4 2.76-1.4 3.52 0l5.9 10.88c.72 1.33-.24 2.95-1.76 2.95H2.1C.58 15-.38 13.38.34 12.05zM8 10.75a1 1 0 1 0 0 2 1 1 0 0 0 0-2M7.25 4.5v5h1.5v-5z"/></svg>';
 
+  /** 행이 완료(해결)된 이슈인지: 이슈 키 링크의 취소선으로 판단 (언어 무관) */
+  function isResolvedRow(bar) {
+    const row = bar.closest(ROW_SELECTOR);
+    const link = row && row.querySelector(KEY_LINK_SELECTOR);
+    if (!link) return false;
+    try {
+      return getComputedStyle(link).textDecorationLine.includes("line-through");
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /** 마감 경고 판정: 기한 초과 또는 오늘부터 N 근무일 이내 */
+  function dueStatus(end, today) {
+    const parsed = parseInt(settings.dueWarnDays, 10);
+    const days = Number.isFinite(parsed) ? Math.max(0, parsed) : DEFAULTS.dueWarnDays;
+    const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (end < t0) {
+      const overdue = Math.round((t0 - end) / 86400000);
+      return { kind: "overdue", n: overdue, title: fmt(t.dueOverdueTitle, { date: iso(end), n: overdue }) };
+    }
+    const remaining = end.getTime() === t0.getTime() ? 0 : countWorkdays(addDays(t0, 1), end);
+    if (remaining <= days) {
+      return { kind: "soon", n: remaining, title: fmt(t.dueSoonTitle, { date: iso(end), n: remaining }) };
+    }
+    return null;
+  }
+
   function applyBars(model) {
     const wantBadge = settings.showWorkdays || settings.dueWarning;
+    const today = model.anchor.date;
     document.querySelectorAll(BAR_SELECTOR).forEach((bar) => {
       observeBar(bar);
       let badge = bar.querySelector(`:scope > .${BADGE_CLASS}`);
       const dates = wantBadge ? barDates(bar, model) : null;
-      if (!dates) {
+      const due = dates && settings.dueWarning && !isResolvedRow(bar) ? dueStatus(dates.end, today) : null;
+      const workdays = dates && settings.showWorkdays ? countWorkdays(dates.start, dates.end) : null;
+      if (!dates || (!due && workdays === null)) {
         if (badge) badge.remove();
         bar.classList.remove(DUE_CLASS);
         return;
       }
-      const dueOff = settings.dueWarning ? offInfo(dates.end) : null;
-      const workdays = settings.showWorkdays ? countWorkdays(dates.start, dates.end) : null;
-      const key = `${iso(dates.start)}|${iso(dates.end)}|${workdays}|${dueOff ? dueOff.kind : ""}|${locale.lang}`;
+      const key = `${iso(dates.start)}|${iso(dates.end)}|${workdays}|${due ? due.kind + due.n : ""}|${locale.lang}`;
       if (!badge) {
         badge = document.createElement("span");
         badge.className = BADGE_CLASS;
@@ -256,9 +288,9 @@
         badge.dataset.jwmKey = key;
         const parts = [];
         const titles = [];
-        if (dueOff) {
-          parts.push(`<span class="jwm-warn-icon">${WARN_SVG}</span>`);
-          titles.push(fmt(t.dueOffTitle, { date: iso(dates.end), name: dueOff.name }));
+        if (due) {
+          parts.push(`<span class="jwm-warn-icon" data-jwm-due="${due.kind}">${WARN_SVG}</span>`);
+          titles.push(due.title);
         }
         if (workdays !== null) {
           parts.push(`<span class="jwm-days">${fmt(t.workdaysShort, { n: workdays })}</span>`);
@@ -270,7 +302,7 @@
       // 좁은 막대는 배지를 막대 바깥(오른쪽)으로
       const width = bar.getBoundingClientRect().width;
       badge.classList.toggle("jwm-badge-outside", width > 0 && width < 56);
-      bar.classList.toggle(DUE_CLASS, !!dueOff);
+      bar.classList.toggle(DUE_CLASS, !!due);
     });
   }
 
@@ -334,10 +366,8 @@
   }
 
   function syncShades(col, offs) {
-    // 컬럼 오버레이 자체에 표식 클래스를 달아 두면 CSS 에서 (덮기 모드일 때) z-index 를 끌어올릴 수 있다.
-    // Jira 의 컬럼 오버레이는 z-index:0 인 stacking context 라서, 자식 음영의 z-index 만으로는 막대(z-index:3) 위로 올라가지 못한다.
-    if (offs.length) col.classList.add(COL_CLASS);
-    else col.classList.remove(COL_CLASS);
+    // 셀(th/td) 안의 오버레이인지, 테이블 뒤에 붙는 전체 높이 오버레이인지 표시 (덮기 모드에서 후자는 숨김)
+    const scope = col.closest("th,td") ? "cell" : "table";
     const existing = new Map();
     col.querySelectorAll(`:scope > .${SHADE_CLASS}`).forEach((el) => existing.set(el.dataset.jwmD, el));
     const wanted = new Set();
@@ -354,15 +384,54 @@
         col.appendChild(el);
       }
       if (el.dataset.jwmKind !== o.kind) el.dataset.jwmKind = o.kind;
+      if (el.dataset.jwmScope !== scope) el.dataset.jwmScope = scope;
     }
     existing.forEach((el, key) => {
       if (!wanted.has(key)) el.remove();
     });
   }
 
+  /* 덮기 모드: 각 이슈 행의 막대 컨테이너 안에 행 전용 음영을 넣는다.
+   * Jira 의 주 단위 컬럼 오버레이(z-index:0)를 끌어올리면 고정(sticky) 열과 푸터 위까지 덮어 버리므로,
+   * 막대(z-index:3)와 같은 컨테이너 안에 z-index:4 음영을 두어 막대와 똑같이 스크롤·클리핑되게 한다.
+   * 성능을 위해 행마다 DIV 하나에 linear-gradient 로 모든 휴일 구간을 그린다. */
+  function rowShadeGradient(model) {
+    const stops = [];
+    const unit = 100 / model.totalDays;
+    for (const w of model.weeks) {
+      for (const o of w.off) {
+        const a = ((w.index * 7 + o.dayIndex) * unit).toFixed(4);
+        const b = ((w.index * 7 + o.dayIndex + 1) * unit).toFixed(4);
+        const c = o.kind === "holiday" ? "var(--jwm-rowshade-holiday)" : "var(--jwm-rowshade)";
+        stops.push(`transparent ${a}%, ${c} ${a}%, ${c} ${b}%, transparent ${b}%`);
+      }
+    }
+    return stops.length ? `linear-gradient(to right, ${stops.join(", ")})` : "none";
+  }
+
+  function applyRowShades(model) {
+    const rows = document.querySelectorAll(ROW_SELECTOR);
+    if (!settings.coverBars) {
+      document.querySelectorAll(`.${ROWSHADE_CLASS}`).forEach((el) => el.remove());
+      return;
+    }
+    const gradient = rowShadeGradient(model);
+    rows.forEach((row) => {
+      const bar = row.querySelector(BAR_SELECTOR);
+      const wrapper = bar ? bar.parentElement : (row.lastElementChild && row.lastElementChild.firstElementChild);
+      if (!wrapper || wrapper.tagName !== "DIV") return;
+      let el = wrapper.querySelector(`:scope > .${ROWSHADE_CLASS}`);
+      if (!el) {
+        el = document.createElement("div");
+        el.className = ROWSHADE_CLASS;
+        wrapper.appendChild(el);
+      }
+      if (el.style.backgroundImage !== gradient) el.style.backgroundImage = gradient;
+    });
+  }
+
   function clearAll() {
-    document.querySelectorAll(`.${SHADE_CLASS}`).forEach((el) => el.remove());
-    document.querySelectorAll(`.${COL_CLASS}`).forEach((el) => el.classList.remove(COL_CLASS));
+    document.querySelectorAll(`.${SHADE_CLASS}, .${ROWSHADE_CLASS}`).forEach((el) => el.remove());
     document.querySelectorAll(`.${BADGE_CLASS}`).forEach((el) => el.remove());
     document.querySelectorAll(`.${DUE_CLASS}`).forEach((el) => el.classList.remove(DUE_CLASS));
     document.querySelectorAll(`.${DAY_CLASS}, .${WORKDAY_CLASS}`).forEach((el) => {
@@ -396,6 +465,7 @@
       }
       applyHeader(model);
       applyColumns(model);
+      applyRowShades(model);
       applyBars(model);
     } catch (e) {
       console.warn("[jwm] apply failed", e);
@@ -449,7 +519,7 @@
       // 우리가 삽입한 노드만 바뀐 경우는 무시
       const relevant = records.some((r) =>
         [...r.addedNodes, ...r.removedNodes].some(
-          (n) => !(n.nodeType === 1 && n.classList && (n.classList.contains(SHADE_CLASS) || n.classList.contains(BADGE_CLASS)))
+          (n) => !(n.nodeType === 1 && n.classList && (n.classList.contains(SHADE_CLASS) || n.classList.contains(BADGE_CLASS) || n.classList.contains(ROWSHADE_CLASS)))
         )
       );
       if (relevant) schedule();
