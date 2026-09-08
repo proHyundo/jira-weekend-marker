@@ -1,0 +1,50 @@
+/* Jira Timeline Weekend Marker */
+
+.jwm-shade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  z-index: 0;
+}
+
+/* ---------- 강조 모드: 주말/공휴일 열을 빨갛게 ---------- */
+html[data-jwm-mode="highlight"] .jwm-shade {
+  background: rgba(222, 53, 11, 0.12);
+}
+html[data-jwm-mode="highlight"] .jwm-shade[data-jwm-kind="holiday"] {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(222, 53, 11, 0.22) 0 6px,
+    rgba(222, 53, 11, 0.10) 6px 12px
+  );
+}
+html[data-jwm-mode="highlight"] .jwm-day-off {
+  color: var(--ds-text-danger, #c9372c) !important;
+  font-weight: 700 !important;
+}
+html[data-jwm-mode="highlight"] .jwm-day-off[data-jwm-kind="holiday"] {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+/* ---------- 마스킹 모드: 주말/공휴일 열을 화면에서 지움 ---------- */
+html[data-jwm-mode="mask"] .jwm-shade {
+  background: var(--ds-surface, #ffffff);
+}
+html[data-jwm-mode="mask"] .jwm-day-off {
+  color: transparent !important;
+  text-decoration: none !important;
+}
+
+/* 막대(이슈 바)까지 덮기 옵션: Jira 막대는 z-index 3 */
+html[data-jwm-cover="1"] .jwm-shade {
+  z-index: 5;
+}
+
+/* 끄기 */
+html[data-jwm-mode="off"] .jwm-shade {
+  display: none;
+}

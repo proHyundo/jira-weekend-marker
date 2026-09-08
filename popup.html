@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Jira Timeline Weekend Marker</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    width: 300px; margin: 0; padding: 14px 16px 16px;
+    font: 13px/1.45 -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", Roboto, sans-serif;
+    color: #172b4d; background: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #dce5f5; background: #1d2125; }
+    textarea { background: #22272b; color: #dce5f5; border-color: #454f59; }
+    .hint, .status { color: #9fadbc; }
+    fieldset { border-color: #454f59; }
+  }
+  h1 { font-size: 14px; margin: 0 0 10px; display: flex; align-items: center; gap: 6px; }
+  h1 .dot { width: 10px; height: 10px; border-radius: 3px; background: #de350b; display: inline-block; }
+  fieldset { border: 1px solid #dfe1e6; border-radius: 6px; padding: 8px 10px 10px; margin: 0 0 10px; }
+  legend { font-weight: 600; padding: 0 4px; }
+  label.row { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
+  label.row small { color: #6b778c; margin-left: auto; }
+  textarea {
+    width: 100%; box-sizing: border-box; height: 70px; resize: vertical;
+    font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace;
+    border: 1px solid #dfe1e6; border-radius: 4px; padding: 6px;
+  }
+  .hint { color: #6b778c; font-size: 11px; margin: 4px 0 0; }
+  .status { font-size: 11px; color: #6b778c; margin-top: 8px; min-height: 14px; }
+  .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+  .swatch.h { background: rgba(222,53,11,.35); }
+  .swatch.m { background: #fff; border: 1px dashed #97a0af; }
+</style>
+</head>
+<body>
+  <h1><span class="dot"></span>Jira Timeline Weekend Marker</h1>
+
+  <fieldset>
+    <legend>표시 방식</legend>
+    <label class="row"><input type="radio" name="mode" value="highlight"> <span class="swatch h"></span>빨갛게 강조</label>
+    <label class="row"><input type="radio" name="mode" value="mask"> <span class="swatch m"></span>화면에서 가리기(마스킹)</label>
+    <label class="row"><input type="radio" name="mode" value="off"> 끄기</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>옵션</legend>
+    <label class="row"><input type="checkbox" id="useKrHolidays"> 한국 공휴일 포함 <small>2025~2027 내장</small></label>
+    <label class="row"><input type="checkbox" id="coverBars"> 이슈 막대 위까지 덮기</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>사용자 지정 휴일</legend>
+    <textarea id="customHolidays" placeholder="2026-12-31 워크숍&#10;2027-01-02 창립기념일" spellcheck="false"></textarea>
+    <p class="hint">한 줄에 하나씩 <code>YYYY-MM-DD 이름</code> 형식. 저장은 자동입니다.</p>
+  </fieldset>
+
+  <div class="status" id="status"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
