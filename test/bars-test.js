@@ -1,5 +1,5 @@
 const { chromium } = require("playwright"); const path = require("path");
-const EXT = path.resolve(__dirname, "../jira-weekend-marker");
+const EXT = path.resolve(__dirname, "..");
 (async () => {
   const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
   const ctx = await browser.newContext({ locale: "ko-KR", viewport: { width: 1750, height: 480 } });

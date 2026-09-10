@@ -150,7 +150,7 @@
       const today = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date();
       const di = w.days.findIndex((d) => d && d.num === today.getDate());
       if (di >= 0) {
-        anchor = { weekIndex: w.index, dayIndex: di, date: today };
+        anchor = { weekIndex: w.index, dayIndex: di, date: today, isToday: true };
         break;
       }
     }
@@ -228,9 +228,12 @@
     return { start: model.dateAt(startIdx), end: model.dateAt(endIdx), source: "pixel" };
   }
 
-  function countWorkdays(start, end) {
+  /** start~end(양끝 포함)의 근무일 수. limit 를 넘기면 limit+1 에서 조기 종료 (마감 임박 판정용). */
+  function countWorkdays(start, end, limit = Infinity) {
     let n = 0;
-    for (let d = start; d <= end; d = addDays(d, 1)) if (!offInfo(d)) n++;
+    for (let d = start; d <= end; d = addDays(d, 1)) {
+      if (!offInfo(d) && ++n > limit) break;
+    }
     return n;
   }
 
@@ -274,7 +277,8 @@
       const overdue = Math.round((t0 - end) / 86400000);
       return { kind: "overdue", n: overdue, title: fmt(t.dueOverdueTitle, { date: iso(end), n: overdue }) };
     }
-    const remaining = end.getTime() === t0.getTime() ? 0 : countWorkdays(addDays(t0, 1), end);
+    // 오늘 이후 ~ 기한(포함)까지의 근무일 수. days 를 넘는 순간 판정이 끝나므로 그 이상은 세지 않는다.
+    const remaining = end.getTime() === t0.getTime() ? 0 : countWorkdays(addDays(t0, 1), end, days);
     if (remaining <= days) {
       return { kind: "soon", n: remaining, title: fmt(t.dueSoonTitle, { date: iso(end), n: remaining }) };
     }
@@ -283,7 +287,9 @@
 
   function applyBars(model) {
     const wantBadge = settings.showWorkdays || settings.dueWarning;
-    const today = model.anchor.date;
+    // 기준일: Jira 의 Today 마커가 있으면 그 날짜, 없으면(월 라벨로 기준을 잡은 경우) 실제 오늘.
+    // anchor.date 를 그대로 쓰면 월 라벨 기준일(그 주 첫 날)이 "오늘"로 취급되어 마감 판정이 틀어진다.
+    const today = model.anchor.isToday ? model.anchor.date : new Date();
     document.querySelectorAll(BAR_SELECTOR).forEach((bar) => {
       observeBar(bar);
       let badge = bar.querySelector(`:scope > .${BADGE_CLASS}`);
@@ -595,6 +601,9 @@
   const isExtensionContext = !!(ext && ext.runtime && ext.runtime.id);
   if (!isExtensionContext) window.__jwm = {
     apply,
+    countWorkdays,
+    dueStatus,
+    buildWeekModel,
     get locale() { return locale; },
     get settings() { return settings; },
     set settings(v) { settings = { ...settings, ...v }; rebuildHolidayMap(); }

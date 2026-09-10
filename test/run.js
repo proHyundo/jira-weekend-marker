@@ -1,7 +1,7 @@
 const { chromium } = require("playwright");
 const path = require("path");
 const fs = require("fs");
-const EXT = path.resolve(__dirname, "../jira-weekend-marker");
+const EXT = path.resolve(__dirname, "..");
 const out = path.join(__dirname, "out"); fs.mkdirSync(out, { recursive: true });
 
 async function load(browser, locale) {

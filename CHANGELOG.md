@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.6] - 2026-09-10
+
+### Fixed
+- **Deadline warning used the wrong "today"** when the timeline had no *Today* marker (e.g. the visible range does not include today, so the date anchor falls back to a month label). The first day of that anchor week was treated as today, which mis-flagged issues as overdue / due soon. The warning now uses the *Today* marker when present and the real current date otherwise.
+- The Playwright tests referenced the extension files by a wrong relative path (`test/../jira-weekend-marker`) and could not run from a repository checkout; `cd test && npm test` now works.
+
+### Changed
+- `countWorkdays()` accepts a limit and stops counting as soon as the deadline check is decided (no more scanning to the due date of far-future issues on every re-render).
+- New `test/due-test.js` covering the working-day count and deadline rules (weekend/holiday due dates, N = 0, today on a weekend, Chuseok week, anchor fallback).
+
 ## [0.0.5] - 2026-09-08
 
 ### Security
