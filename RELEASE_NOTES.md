@@ -1,9 +1,10 @@
-# Jira Timeline Weekend Marker v0.0.6
+# Jira Timeline Weekend Marker v0.0.7
 
 Highlights or hides weekend and public-holiday columns in the Jira Cloud timeline (Weeks view).
 
 ## What's new
 
+- **New-version check** — unpacked installs never auto-update, so the extension now checks GitHub once a day and shows a "NEW" badge plus a download link in the popup when a newer release exists. Can be turned off in the popup (*Check for new versions*). `alarms` permission added.
 - **Fix: deadline warning "today" reference** — when the timeline has no *Today* marker the warning compared due dates against the first day of the anchor week instead of the real date; fixed. Deadline check also stops counting early (faster on long timelines). Test suite runs from a checkout again (`cd test && npm test`).
 - **Security hardening** — scope narrowed to `*.atlassian.net/jira/*`, no `innerHTML`, validated settings, pinned CI actions. See `SECURITY.md`.
 - **Working-day count in bars** — badge with the number of working days (weekends/holidays excluded) on every issue bar.
@@ -21,9 +22,9 @@ Highlights or hides weekend and public-holiday columns in the Jira Cloud timelin
 
 | File | Browser | OS | Install |
 |---|---|---|---|
-| `jira-weekend-marker-0.0.6-chrome-edge.zip` | Chrome, Edge, other Chromium browsers | Windows / macOS / Linux | Unzip → `chrome://extensions` or `edge://extensions` → Developer mode → *Load unpacked* |
-| `jira-weekend-marker-0.0.6-safari-source.zip` | Safari | macOS | Unzip → `./safari/build-safari.sh` → Run in Xcode → enable in Safari ▸ Settings ▸ Extensions |
-| `jira-weekend-marker-0.0.6-safari-macos-app.zip` | Safari (unsigned app) | macOS | Unzip → open the app once → Safari ▸ Develop ▸ *Allow Unsigned Extensions* → enable in Settings ▸ Extensions |
+| `jira-weekend-marker-0.0.7-chrome-edge.zip` | Chrome, Edge, other Chromium browsers | Windows / macOS / Linux | Unzip → `chrome://extensions` or `edge://extensions` → Developer mode → *Load unpacked* |
+| `jira-weekend-marker-0.0.7-safari-source.zip` | Safari | macOS | Unzip → `./safari/build-safari.sh` → Run in Xcode → enable in Safari ▸ Settings ▸ Extensions |
+| `jira-weekend-marker-0.0.7-safari-macos-app.zip` | Safari (unsigned app) | macOS | Unzip → open the app once → Safari ▸ Develop ▸ *Allow Unsigned Extensions* → enable in Settings ▸ Extensions |
 
 ## Notes
 
@@ -33,12 +34,13 @@ Highlights or hides weekend and public-holiday columns in the Jira Cloud timelin
 
 ---
 
-# Jira Timeline Weekend Marker v0.0.6 (한국어)
+# Jira Timeline Weekend Marker v0.0.7 (한국어)
 
 Jira Cloud 타임라인(주 단위 보기)에서 주말·공휴일 열을 빨갛게 강조하거나 화면에서 가립니다.
 
 ## 새로운 기능
 
+- **새 버전 확인** — 압축 해제 설치는 자동 업데이트되지 않으므로, 하루 한 번 GitHub 릴리스를 확인해 새 버전이 있으면 아이콘에 "NEW" 배지와 팝업에 다운로드 링크를 표시합니다. 팝업의 *새 버전 확인* 옵션으로 끌 수 있습니다. `alarms` 권한 추가.
 - **수정: 마감 경고 기준일** — 타임라인에 *Today* 마커가 없을 때 기준 주의 첫날을 오늘로 간주해 마감 판정이 틀어지던 문제 수정. 마감 판정 시 근무일 계산을 조기 종료해 긴 타임라인에서 더 빠릅니다. 저장소에서 `cd test && npm test`가 바로 실행됩니다.
 - **보안 강화** — 동작 범위를 `*.atlassian.net/jira/*`로 축소, `innerHTML` 제거, 설정값 검증, CI 액션 SHA 고정. `SECURITY.md` 참고.
 - **막대 안 근무일 수 표시** — 모든 이슈 막대에 주말·공휴일을 뺀 근무일 수 배지.
@@ -56,9 +58,9 @@ Jira Cloud 타임라인(주 단위 보기)에서 주말·공휴일 열을 빨갛
 
 | 파일 | 브라우저 | OS | 설치 |
 |---|---|---|---|
-| `jira-weekend-marker-0.0.6-chrome-edge.zip` | Chrome, Edge 등 Chromium 계열 | Windows / macOS / Linux | 압축 해제 → `chrome://extensions` 또는 `edge://extensions` → 개발자 모드 → *압축해제된 확장 프로그램을 로드* |
-| `jira-weekend-marker-0.0.6-safari-source.zip` | Safari | macOS | 압축 해제 → `./safari/build-safari.sh` → Xcode에서 Run → Safari ▸ 설정 ▸ 확장 프로그램에서 활성화 |
-| `jira-weekend-marker-0.0.6-safari-macos-app.zip` | Safari (미서명 앱) | macOS | 압축 해제 → 앱 한 번 실행 → Safari ▸ 개발자용 ▸ *서명되지 않은 확장 프로그램 허용* → 설정 ▸ 확장 프로그램에서 활성화 |
+| `jira-weekend-marker-0.0.7-chrome-edge.zip` | Chrome, Edge 등 Chromium 계열 | Windows / macOS / Linux | 압축 해제 → `chrome://extensions` 또는 `edge://extensions` → 개발자 모드 → *압축해제된 확장 프로그램을 로드* |
+| `jira-weekend-marker-0.0.7-safari-source.zip` | Safari | macOS | 압축 해제 → `./safari/build-safari.sh` → Xcode에서 Run → Safari ▸ 설정 ▸ 확장 프로그램에서 활성화 |
+| `jira-weekend-marker-0.0.7-safari-macos-app.zip` | Safari (미서명 앱) | macOS | 압축 해제 → 앱 한 번 실행 → Safari ▸ 개발자용 ▸ *서명되지 않은 확장 프로그램 허용* → 설정 ▸ 확장 프로그램에서 활성화 |
 
 ## 참고
 

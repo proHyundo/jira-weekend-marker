@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.7] - 2026-09-10
+
+### Added
+- **New-version check.** Extensions loaded unpacked never auto-update, so the "NEW" badge from 0.0.4 only appeared after the browser itself replaced the build. The background worker now asks GitHub for the latest release once a day (`alarms`, and when the popup is opened after more than 20 hours). If it is newer than the installed version the toolbar icon shows "NEW" and the popup shows a "New version vX available — download" link to the release page. New popup option *Check for new versions* (on by default) turns it off; tag and URL from the response are validated before use. `alarms` permission added. See `SECURITY.md`.
+- `test/update-test.js` (Node-only unit test of the release check) and popup coverage of the update box.
+
 ## [0.0.6] - 2026-09-10
 
 ### Fixed

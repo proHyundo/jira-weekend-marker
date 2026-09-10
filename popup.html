@@ -42,6 +42,8 @@
   .whatsnew { margin-top: 8px; padding: 6px 8px; border-radius: 4px; background: #fff7d6; font-size: 12px; }
   .whatsnew a { color: #172b4d; font-weight: 600; text-decoration: none; }
   @media (prefers-color-scheme: dark) { .whatsnew { background: #3f3a1e; } .whatsnew a { color: #f5e6a3; } }
+  .whatsnew.update { background: #e3fcef; }
+  @media (prefers-color-scheme: dark) { .whatsnew.update { background: #1c3329; } .whatsnew.update a { color: #abf5d1; } }
   .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
   .swatch.h { background: rgba(222,53,11,.35); }
   .swatch.m { background: #fff; border: 1px dashed #97a0af; }
@@ -69,6 +71,7 @@
     <legend data-i18n="optionsLegend">Options</legend>
     <label class="row"><input type="checkbox" id="useHolidays"> <span data-i18n="useHolidays"></span></label>
     <label class="row"><input type="checkbox" id="coverBars"> <span data-i18n="coverBars"></span></label>
+    <label class="row"><input type="checkbox" id="checkUpdates"> <span data-i18n="checkUpdates"></span></label>
   </fieldset>
 
   <fieldset>
@@ -96,6 +99,7 @@
   </fieldset>
 
   <div class="whatsnew" id="whatsnew" hidden><a id="whatsnewLink" target="_blank" rel="noopener"></a></div>
+  <div class="whatsnew update" id="update" hidden><a id="updateLink" target="_blank" rel="noopener"></a></div>
   <div class="status" id="status"></div>
   <script src="holidays.js"></script>
   <script src="locales.js"></script>

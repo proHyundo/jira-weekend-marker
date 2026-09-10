@@ -30,6 +30,7 @@ Holiday calendars for South Korea, the United States, China and India; UI in Kor
 - **Languages** – the popup and all tooltips follow the selected country's language (ko / en / zh / hi); the language can be overridden independently. The store listing is localized as well.
 - **Colors** – highlight color, shading intensity (5–60 %) and warning color are adjustable, with a *Reset colors* button.
 - **Update notice** – after the extension is updated, the toolbar icon shows a "NEW" badge and the popup shows an "Updated to vX — see what's new" link to the release notes until it has been opened once.
+- **New-version check** – side-loaded extensions never auto-update, so once a day the background worker asks GitHub for the latest release (`api.github.com/repos/proHyundo/jira-weekend-marker/releases/latest`). If it is newer than the installed version, the icon gets a "NEW" badge and the popup shows a "New version vX available — download" link to the release page. The check can be turned off in the popup (*Check for new versions*); no data other than the anonymous request itself is sent.
 - Settings are stored with `storage.sync`, so Chrome/Edge sync them across devices signed in to the same browser profile (Safari keeps them local).
 
 ## Install
@@ -89,14 +90,14 @@ Holiday calendars live in `holidays.js` (per country: `dates`, `workdays`, optio
 
 ## Security & privacy
 
-The extension requests only `storage` and host access to `https://*.atlassian.net/jira/*`. It makes no network requests, collects no data and bundles all holiday tables. Injected elements are built with DOM APIs (no `innerHTML`) and every stored setting is validated before use. See [SECURITY.md](SECURITY.md) for details and for how to report a vulnerability.
+The extension requests only `storage`, `alarms` and host access to `https://*.atlassian.net/jira/*`. Its only network request is the optional once-a-day query of the GitHub releases API for the new-version check (no identifiers, no cookies; can be disabled in the popup). It collects no data and bundles all holiday tables. Injected elements are built with DOM APIs (no `innerHTML`) and every stored setting is validated before use. See [SECURITY.md](SECURITY.md) for details and for how to report a vulnerability.
 
 ## Project layout
 
 ```
 manifest.json        Manifest V3 (Chrome, Edge, Safari)
 SECURITY.md          permissions, data handling, vulnerability reporting
-background.js        service worker: "NEW" badge after an update
+background.js        service worker: "NEW" badge after an update, daily GitHub release check
 content.js / .css    timeline analysis, shading, badges, warnings
 holidays.js          holiday calendars (KR / US / CN / IN)
 locales.js           UI strings (en / ko / zh / hi), country detection
@@ -153,6 +154,7 @@ Jira Cloud 타임라인(주 단위 보기)에서 **주말·공휴일 열을 강�
 - **언어** – 팝업과 모든 툴팁은 선택한 국가의 언어(ko / en / zh / hi)를 따르며 언어만 따로 바꿀 수도 있습니다. 스토어 설명도 다국어입니다.
 - **색상** – 강조 색상, 음영 강도(5~60%), 경고 색상을 조절할 수 있고 *색상 초기화* 버튼으로 기본값으로 돌아갑니다.
 - **업데이트 알림** – 확장이 업데이트되면 툴바 아이콘에 "NEW" 배지가 붙고, 팝업에 "vX로 업데이트됨 — 변경 내용 보기" 링크가 한 번 열 때까지 표시됩니다.
+- **새 버전 확인** – 압축 해제 방식으로 설치한 확장은 자동 업데이트되지 않으므로, 백그라운드 워커가 하루 한 번 GitHub 최신 릴리스(`api.github.com/repos/proHyundo/jira-weekend-marker/releases/latest`)를 조회합니다. 설치된 버전보다 새 릴리스가 있으면 아이콘에 "NEW" 배지가 붙고 팝업에 "새 버전 vX 사용 가능 — 다운로드" 링크가 표시됩니다. 팝업의 *새 버전 확인* 옵션으로 끌 수 있으며, 익명 요청 외에 어떤 데이터도 보내지 않습니다.
 - 설정은 `storage.sync`에 저장되어 같은 브라우저 프로필로 로그인한 기기 간에 동기화됩니다(Safari는 로컬 저장).
 
 ## 설치
@@ -212,14 +214,14 @@ macOS CI 작업이 성공하면 서명되지 않은 `jira-weekend-marker-<versio
 
 ## 보안·개인정보
 
-확장이 요청하는 권한은 `storage`와 `https://*.atlassian.net/jira/*` 호스트 접근뿐입니다. 네트워크 요청을 전혀 하지 않고 데이터를 수집하지 않으며, 공휴일 표는 모두 내장되어 있습니다. 삽입 요소는 DOM API로만 생성하고(`innerHTML` 미사용) 저장된 설정값은 사용 전에 모두 검증합니다. 자세한 내용과 취약점 제보 방법은 [SECURITY.md](SECURITY.md)를 참고하세요.
+확장이 요청하는 권한은 `storage`, `alarms`와 `https://*.atlassian.net/jira/*` 호스트 접근뿐입니다. 네트워크 요청은 새 버전 확인을 위해 하루 한 번 GitHub 릴리스 API를 조회하는 것(식별자·쿠키 없음, 팝업에서 끌 수 있음)이 유일하며, 데이터를 수집하지 않고 공휴일 표는 모두 내장되어 있습니다. 삽입 요소는 DOM API로만 생성하고(`innerHTML` 미사용) 저장된 설정값은 사용 전에 모두 검증합니다. 자세한 내용과 취약점 제보 방법은 [SECURITY.md](SECURITY.md)를 참고하세요.
 
 ## 프로젝트 구성
 
 ```
 manifest.json        Manifest V3 (Chrome, Edge, Safari 공용)
 SECURITY.md          권한, 데이터 처리, 취약점 제보
-background.js        서비스 워커: 업데이트 후 "NEW" 배지
+background.js        서비스 워커: 업데이트 후 "NEW" 배지, 하루 1회 GitHub 릴리스 확인
 content.js / .css    타임라인 분석, 음영, 배지, 경고
 holidays.js          공휴일 달력 (KR / US / CN / IN)
 locales.js           UI 문자열 (en / ko / zh / hi), 국가 자동 판별

@@ -11,7 +11,8 @@ const DEFAULTS = {
   dueWarnDays: 3,
   highlightColor: "#de350b",
   highlightAlpha: 0.12,
-  warnColor: "#e2b203"
+  warnColor: "#e2b203",
+  checkUpdates: true
 };
 const COUNTRIES = ["KR", "US", "CN", "IN"];
 const LANGS = ["en", "ko", "zh", "hi"];
@@ -64,6 +65,7 @@ function render() {
   document.querySelectorAll('input[name="mode"]').forEach((el) => (el.checked = el.value === settings.mode));
   $("#useHolidays").checked = !!settings.useHolidays;
   $("#coverBars").checked = !!settings.coverBars;
+  $("#checkUpdates").checked = settings.checkUpdates !== false;
   $("#showWorkdays").checked = !!settings.showWorkdays;
   $("#dueWarning").checked = !!settings.dueWarning;
   const days = Number.isFinite(Number(settings.dueWarnDays)) ? Number(settings.dueWarnDays) : DEFAULTS.dueWarnDays;
@@ -138,6 +140,46 @@ function showWhatsNew() {
   }
 }
 
+// 새 버전 확인: background.js 가 GitHub 최신 릴리스를 조회한 결과를 받아 다운로드 링크를 보여 준다
+function compareVersions(a, b) {
+  const pa = String(a).split(".").map((n) => parseInt(n, 10) || 0);
+  const pb = String(b).split(".").map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d) return d > 0 ? 1 : -1;
+  }
+  return 0;
+}
+function showUpdate(state) {
+  const box = $("#update");
+  const link = $("#updateLink");
+  const current = String(ext.runtime.getManifest().version);
+  const latest = state && state.enabled && state.latestVersion ? String(state.latestVersion) : "";
+  const url = state && String(state.latestUrl || "");
+  const ok = latest && /^\d+(\.\d+){0,3}$/.test(latest) && compareVersions(latest, current) > 0 &&
+    url.startsWith("https://github.com/proHyundo/jira-weekend-marker/");
+  if (!ok) {
+    box.hidden = true;
+    return;
+  }
+  link.href = url;
+  link.textContent = fmt(t.updateAvailable, { v: latest });
+  box.hidden = false;
+}
+function checkUpdate(force) {
+  try {
+    if (!ext.runtime.sendMessage) return;
+    const cb = (state) => {
+      if (ext.runtime.lastError) return;
+      showUpdate(state);
+    };
+    const p = ext.runtime.sendMessage({ type: "jwm:checkUpdate", force: !!force }, cb);
+    if (p && typeof p.then === "function") p.then(cb, () => {});
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 storage.get(null, (items) => {
   const s = { ...DEFAULTS, ...(items || {}) };
   if (typeof items?.useKrHolidays === "boolean" && typeof items?.useHolidays !== "boolean") s.useHolidays = items.useKrHolidays;
@@ -145,6 +187,7 @@ storage.get(null, (items) => {
   render();
   refreshStatus();
   showWhatsNew();
+  checkUpdate(false);
 });
 
 $("#country").addEventListener("change", (e) => save({ country: e.target.value }));
@@ -154,6 +197,11 @@ document.querySelectorAll('input[name="mode"]').forEach((r) =>
 );
 $("#useHolidays").addEventListener("change", (e) => save({ useHolidays: e.target.checked }));
 $("#coverBars").addEventListener("change", (e) => save({ coverBars: e.target.checked }));
+$("#checkUpdates").addEventListener("change", (e) => {
+  save({ checkUpdates: e.target.checked });
+  if (!e.target.checked) $("#update").hidden = true;
+  else setTimeout(() => checkUpdate(true), 300);
+});
 $("#showWorkdays").addEventListener("change", (e) => save({ showWorkdays: e.target.checked }));
 $("#dueWarning").addEventListener("change", (e) => save({ dueWarning: e.target.checked }));
 $("#dueWarnDays").addEventListener("change", (e) => {

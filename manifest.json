@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "minimum_chrome_version": "105",
@@ -11,7 +11,8 @@
     "128": "icons/icon128.png"
   },
   "permissions": [
-    "storage"
+    "storage",
+    "alarms"
   ],
   "host_permissions": [
     "https://*.atlassian.net/jira/*"
